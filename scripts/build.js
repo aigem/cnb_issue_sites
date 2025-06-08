@@ -20,7 +20,10 @@ function loadEnvFile(filePath) {
           const value = valueParts.join('=').trim();
           // 移除引号
           const cleanValue = value.replace(/^["']|["']$/g, '');
-          process.env[key.trim()] = cleanValue;
+          // 只在环境变量不存在时才设置（优先使用系统环境变量）
+          if (!process.env[key.trim()]) {
+            process.env[key.trim()] = cleanValue;
+          }
         }
       }
     });
@@ -28,13 +31,74 @@ function loadEnvFile(filePath) {
   }
 }
 
-// 加载 .env.local 文件
+// 设置环境变量（优先使用系统环境变量）
+function setupEnvironmentVariables() {
+  // 设置BASE_URL
+  if (!process.env.BASE_URL) {
+    process.env.BASE_URL = 'https://api.cnb.cool';
+  }
+
+  // 从CNB_REPO_SLUG_LOWERCASE获取REPO值
+  if (process.env.CNB_REPO_SLUG_LOWERCASE && !process.env.REPO) {
+    process.env.REPO = process.env.CNB_REPO_SLUG_LOWERCASE;
+  }
+
+  // 从CNB_TOKEN获取AUTH_TOKEN值
+  if (process.env.CNB_TOKEN && !process.env.AUTH_TOKEN) {
+    process.env.AUTH_TOKEN = process.env.CNB_TOKEN;
+  }
+
+  // 设置其他默认值
+  if (!process.env.NEXT_PUBLIC_SITE_URL) {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://blog.kuai.host';
+  }
+
+  if (!process.env.NEXT_PUBLIC_SITE_NAME) {
+    process.env.NEXT_PUBLIC_SITE_NAME = 'CNB博客';
+  }
+
+  if (!process.env.NEXT_PUBLIC_SITE_DESCRIPTION) {
+    process.env.NEXT_PUBLIC_SITE_DESCRIPTION = '分享技术见解、编程经验和创新思考的中文技术博客';
+  }
+
+  if (!process.env.NEXT_PUBLIC_POSTS_PER_PAGE) {
+    process.env.NEXT_PUBLIC_POSTS_PER_PAGE = '12';
+  }
+
+  if (!process.env.NEXT_PUBLIC_FEATURED_POSTS_COUNT) {
+    process.env.NEXT_PUBLIC_FEATURED_POSTS_COUNT = '6';
+  }
+}
+
+// 首先设置环境变量
+setupEnvironmentVariables();
+
+// 然后加载 .env.local 文件（如果存在，但不会覆盖已有的环境变量）
 loadEnvFile('.env.local');
 
 console.log('🔧 环境变量配置:');
 console.log(`   BASE_URL: ${process.env.BASE_URL}`);
 console.log(`   REPO: ${process.env.REPO}`);
-console.log(`   AUTH_TOKEN: ${process.env.AUTH_TOKEN ? '***已设置***' : '未设置'}\n`);
+console.log(`   AUTH_TOKEN: ${process.env.AUTH_TOKEN ? '***已设置***' : '未设置'}`);
+console.log(`   CNB_REPO_SLUG_LOWERCASE: ${process.env.CNB_REPO_SLUG_LOWERCASE || '未设置'}`);
+console.log(`   CNB_TOKEN: ${process.env.CNB_TOKEN ? '***已设置***' : '未设置'}`);
+console.log(`   NEXT_PUBLIC_SITE_URL: ${process.env.NEXT_PUBLIC_SITE_URL}\n`);
+
+// 验证必需的环境变量
+const requiredEnvVars = ['BASE_URL', 'REPO', 'AUTH_TOKEN'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('❌ 缺少必需的环境变量:');
+  missingVars.forEach(varName => {
+    console.error(`   - ${varName}`);
+  });
+  console.error('\n请设置以下环境变量：');
+  console.error('   - CNB_REPO_SLUG_LOWERCASE (用于REPO)');
+  console.error('   - CNB_TOKEN (用于AUTH_TOKEN)');
+  console.error('\n或者创建 .env.local 文件包含这些变量');
+  process.exit(1);
+}
 
 try {
   // 清理之前的构建
