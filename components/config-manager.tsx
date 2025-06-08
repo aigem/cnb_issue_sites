@@ -32,9 +32,10 @@ interface InputFieldProps {
     type?: 'text' | 'number' | 'email' | 'url'
     placeholder?: string
     description?: string
+    disabled?: boolean
 }
 
-function InputField({ label, value, onChange, type = 'text', placeholder, description }: InputFieldProps) {
+function InputField({ label, value, onChange, type = 'text', placeholder, description, disabled = false }: InputFieldProps) {
     return (
         <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -45,7 +46,9 @@ function InputField({ label, value, onChange, type = 'text', placeholder, descri
                 value={value}
                 onChange={(e) => onChange(type === 'number' ? Number(e.target.value) : e.target.value)}
                 placeholder={placeholder}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 ${disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}`}
+                disabled={disabled}
+                readOnly={disabled}
             />
             {description && (
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -62,9 +65,10 @@ interface SelectFieldProps {
     onChange: (value: string) => void
     options: { value: string; label: string }[]
     description?: string
+    disabled?: boolean
 }
 
-function SelectField({ label, value, onChange, options, description }: SelectFieldProps) {
+function SelectField({ label, value, onChange, options, description, disabled = false }: SelectFieldProps) {
     return (
         <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -73,7 +77,8 @@ function SelectField({ label, value, onChange, options, description }: SelectFie
             <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 ${disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}`}
+                disabled={disabled}
             >
                 {options.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -95,9 +100,10 @@ interface CheckboxFieldProps {
     checked: boolean
     onChange: (checked: boolean) => void
     description?: string
+    disabled?: boolean
 }
 
-function CheckboxField({ label, checked, onChange, description }: CheckboxFieldProps) {
+function CheckboxField({ label, checked, onChange, description, disabled = false }: CheckboxFieldProps) {
     return (
         <div className="flex items-start">
             <div className="flex items-center h-5">
@@ -105,7 +111,8 @@ function CheckboxField({ label, checked, onChange, description }: CheckboxFieldP
                     type="checkbox"
                     checked={checked}
                     onChange={(e) => onChange(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 ${disabled ? 'cursor-not-allowed' : ''}`}
+                    disabled={disabled}
                 />
             </div>
             <div className="ml-3 text-sm">
@@ -127,6 +134,11 @@ export default function ConfigManager() {
     const [localConfig, setLocalConfig] = useState<BlogConfig | null>(null)
     const [saving, setSaving] = useState(false)
     const [saveMessage, setSaveMessage] = useState<string | null>(null)
+    const [isProduction, setIsProduction] = useState(false);
+
+    useEffect(() => {
+      setIsProduction(process.env.NODE_ENV === 'production');
+    }, []);
 
     useEffect(() => {
         // 确保加载最新的配置
@@ -169,9 +181,9 @@ export default function ConfigManager() {
 
         try {
             // 在静态导出模式下，配置保存功能仅在开发环境可用
-            if (process.env.NODE_ENV === 'production') {
-                setSaveMessage('生产环境请通过修改 blog.config.json 文件来更新配置')
-                setTimeout(() => setSaveMessage(null), 5000)
+            if (isProduction) {
+                setSaveMessage('生产环境为只读模式。如需修改配置，请直接编辑 blog.config.json 文件并重新构建项目。')
+                setTimeout(() => setSaveMessage(null), 7000)
                 return
             }
 
@@ -183,12 +195,12 @@ export default function ConfigManager() {
                 body: JSON.stringify(localConfig),
             })
 
+            const saveData = await response.json();
             if (response.ok) {
-                setSaveMessage('配置保存成功！')
-                setTimeout(() => setSaveMessage(null), 3000)
+                setSaveMessage(saveData.message || '配置保存成功！请重新构建项目以应用更改。');
+                // No timeout, message should persist until next action or if user reloads
             } else {
-                const errorData = await response.json()
-                throw new Error(errorData.error || '保存失败')
+                throw new Error(saveData.error || '保存失败')
             }
         } catch (error) {
             setSaveMessage(`配置保存失败: ${error instanceof Error ? error.message : '请重试'}`)
@@ -199,10 +211,11 @@ export default function ConfigManager() {
     }
 
     const handleReset = () => {
+        if (isProduction) return; // Don't allow reset in production
         if (config) {
-            setLocalConfig({ ...config })
-            setSaveMessage('配置已重置')
-            setTimeout(() => setSaveMessage(null), 3000)
+            setLocalConfig({ ...config }) // Reset to the initially loaded config from /api/config
+            setSaveMessage('配置已重置为上次加载的状态。如需恢复默认出厂设置，请手动修改或删除 blog.config.json 并重启开发服务器。')
+            setTimeout(() => setSaveMessage(null), 7000)
         }
     }
 
@@ -232,36 +245,35 @@ export default function ConfigManager() {
                     <Button
                         variant="outline"
                         onClick={handleReset}
-                        disabled={saving}
+                        disabled={saving || isProduction}
                     >
-                        重置
+                        重置表单
                     </Button>
                     <Button
                         onClick={handleSave}
-                        disabled={saving}
+                        disabled={saving || isProduction}
                     >
-                        {saving ? '保存中...' : '保存配置'}
+                        {saving ? '保存中...' : (isProduction ? '保存（生产禁用）' : '保存配置到 blog.config.json')}
                     </Button>
                 </div>
             </div>
 
             {/* 静态导出提示 */}
-            {process.env.NODE_ENV === 'production' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            {isProduction && (
+                <div className="bg-blue-50 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-700 rounded-md p-4">
                     <div className="flex">
                         <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                            <svg className="h-5 w-5 text-blue-400 dark:text-blue-500" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
                         </div>
                         <div className="ml-3">
-                            <h3 className="text-sm font-medium text-blue-800">
-                                静态导出模式
+                            <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                                只读模式（生产环境）
                             </h3>
-                            <div className="mt-2 text-sm text-blue-700">
+                            <div className="mt-2 text-sm text-blue-700 dark:text-blue-400">
                                 <p>
-                                    当前为生产环境，配置更改需要通过修改 <code className="bg-blue-100 px-1 rounded">blog.config.json</code> 文件并重新构建来生效。
-                                    此界面仅用于查看当前配置。
+                                    当前为生产环境，配置信息仅供查看。如需修改，请直接编辑项目根目录下的 <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">blog.config.json</code> 文件，然后重新构建并部署您的站点。
                                 </p>
                             </div>
                         </div>
@@ -287,6 +299,7 @@ export default function ConfigManager() {
                             value={localConfig.site.title}
                             onChange={(value) => updateConfig('site', 'title', value)}
                             placeholder="我的博客"
+                            disabled={isProduction}
                         />
                         <InputField
                             label="站点URL"
@@ -294,12 +307,14 @@ export default function ConfigManager() {
                             onChange={(value) => updateConfig('site', 'url', value)}
                             type="url"
                             placeholder="https://blog.example.com"
+                            disabled={isProduction}
                         />
                         <InputField
                             label="作者名称"
                             value={localConfig.site.author}
                             onChange={(value) => updateConfig('site', 'author', value)}
                             placeholder="张三"
+                            disabled={isProduction}
                         />
                         <InputField
                             label="联系邮箱"
@@ -307,6 +322,7 @@ export default function ConfigManager() {
                             onChange={(value) => updateConfig('site', 'email', value)}
                             type="email"
                             placeholder="contact@example.com"
+                            disabled={isProduction}
                         />
                     </div>
                     <InputField
@@ -314,6 +330,7 @@ export default function ConfigManager() {
                         value={localConfig.site.description}
                         onChange={(value) => updateConfig('site', 'description', value)}
                         placeholder="分享技术，记录生活"
+                        disabled={isProduction}
                     />
                 </ConfigSection>
 
@@ -326,6 +343,7 @@ export default function ConfigManager() {
                             onChange={(value) => updateConfig('content', 'postsPerPage', value)}
                             type="number"
                             description="首页和列表页显示的文章数量"
+                            disabled={isProduction}
                         />
                         <InputField
                             label="摘要长度"
@@ -333,6 +351,7 @@ export default function ConfigManager() {
                             onChange={(value) => updateConfig('content', 'excerptLength', value)}
                             type="number"
                             description="文章摘要的字符数"
+                            disabled={isProduction}
                         />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -340,21 +359,25 @@ export default function ConfigManager() {
                             label="显示阅读时间"
                             checked={localConfig.content.showReadingTime}
                             onChange={(checked) => updateConfig('content', 'showReadingTime', checked)}
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="显示作者信息"
                             checked={localConfig.content.showAuthor}
                             onChange={(checked) => updateConfig('content', 'showAuthor', checked)}
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="显示发布日期"
                             checked={localConfig.content.showDate}
                             onChange={(checked) => updateConfig('content', 'showDate', checked)}
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="显示标签"
                             checked={localConfig.content.showTags}
                             onChange={(checked) => updateConfig('content', 'showTags', checked)}
+                            disabled={isProduction}
                         />
                     </div>
                 </ConfigSection>
@@ -367,24 +390,28 @@ export default function ConfigManager() {
                             checked={localConfig.markdown.enableCodeHighlight}
                             onChange={(checked) => updateConfig('markdown', 'enableCodeHighlight', checked)}
                             description="为代码块添加语法高亮"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="启用数学公式"
                             checked={localConfig.markdown.enableMath}
                             onChange={(checked) => updateConfig('markdown', 'enableMath', checked)}
                             description="支持LaTeX数学公式渲染"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="启用目录导航"
                             checked={localConfig.markdown.enableToc}
                             onChange={(checked) => updateConfig('markdown', 'enableToc', checked)}
                             description="自动生成文章目录"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="启用任务列表"
                             checked={localConfig.markdown.enableTaskList}
                             onChange={(checked) => updateConfig('markdown', 'enableTaskList', checked)}
                             description="支持GitHub风格的任务列表"
+                            disabled={isProduction}
                         />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -397,6 +424,7 @@ export default function ConfigManager() {
                                 { value: 'dark', label: '深色' },
                                 { value: 'light', label: '浅色' },
                             ]}
+                            disabled={isProduction}
                         />
                         <SelectField
                             label="数学渲染器"
@@ -406,6 +434,7 @@ export default function ConfigManager() {
                                 { value: 'katex', label: 'KaTeX' },
                                 { value: 'mathjax', label: 'MathJax' },
                             ]}
+                            disabled={isProduction}
                         />
                     </div>
                 </ConfigSection>
@@ -419,6 +448,7 @@ export default function ConfigManager() {
                             onChange={(value) => updateConfig('theme', 'primaryColor', value)}
                             placeholder="#3b82f6"
                             description="十六进制颜色代码"
+                            disabled={isProduction}
                         />
                         <SelectField
                             label="深色模式"
@@ -429,6 +459,7 @@ export default function ConfigManager() {
                                 { value: 'light', label: '浅色' },
                                 { value: 'dark', label: '深色' },
                             ]}
+                            disabled={isProduction}
                         />
                         <SelectField
                             label="字体大小"
@@ -439,6 +470,7 @@ export default function ConfigManager() {
                                 { value: 'base', label: '中' },
                                 { value: 'lg', label: '大' },
                             ]}
+                            disabled={isProduction}
                         />
                         <SelectField
                             label="布局样式"
@@ -449,6 +481,7 @@ export default function ConfigManager() {
                                 { value: 'wide', label: '宽屏' },
                                 { value: 'compact', label: '紧凑' },
                             ]}
+                            disabled={isProduction}
                         />
                     </div>
                     <InputField
@@ -457,6 +490,7 @@ export default function ConfigManager() {
                         onChange={(value) => updateConfig('theme', 'fontFamily', value)}
                         placeholder="Inter, sans-serif"
                         description="CSS字体族设置"
+                        disabled={isProduction}
                     />
                 </ConfigSection>
 
@@ -468,36 +502,42 @@ export default function ConfigManager() {
                             checked={localConfig.features.newsletter}
                             onChange={(checked) => updateConfig('features', 'newsletter', checked)}
                             description="显示邮件订阅组件"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="数据分析"
                             checked={localConfig.features.analytics}
                             onChange={(checked) => updateConfig('features', 'analytics', checked)}
                             description="启用访问统计"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="PWA支持"
                             checked={localConfig.features.pwa}
                             onChange={(checked) => updateConfig('features', 'pwa', checked)}
                             description="渐进式Web应用功能"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="RSS订阅"
                             checked={localConfig.features.rss}
                             onChange={(checked) => updateConfig('features', 'rss', checked)}
                             description="生成RSS订阅源"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="社交分享"
                             checked={localConfig.features.socialShare}
                             onChange={(checked) => updateConfig('features', 'socialShare', checked)}
                             description="文章社交分享按钮"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="显示首页统计信息"
                             checked={localConfig.features.showHomepageStats}
                             onChange={(checked) => updateConfig('features', 'showHomepageStats', checked)}
                             description="在首页底部显示统计数据"
+                            disabled={isProduction}
                         />
                     </div>
                 </ConfigSection>
@@ -510,18 +550,21 @@ export default function ConfigManager() {
                             checked={localConfig.seo.enableSitemap}
                             onChange={(checked) => updateConfig('seo', 'enableSitemap', checked)}
                             description="自动生成sitemap.xml"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="生成robots.txt"
                             checked={localConfig.seo.enableRobots}
                             onChange={(checked) => updateConfig('seo', 'enableRobots', checked)}
                             description="搜索引擎爬虫规则"
+                            disabled={isProduction}
                         />
                         <CheckboxField
                             label="结构化数据"
                             checked={localConfig.seo.enableJsonLd}
                             onChange={(checked) => updateConfig('seo', 'enableJsonLd', checked)}
                             description="JSON-LD结构化数据"
+                            disabled={isProduction}
                         />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -531,6 +574,7 @@ export default function ConfigManager() {
                             onChange={(value) => updateConfig('seo', 'defaultImage', value)}
                             placeholder="/og-image.png"
                             description="Open Graph默认图片"
+                            disabled={isProduction}
                         />
                         <InputField
                             label="Twitter账号"
@@ -538,6 +582,7 @@ export default function ConfigManager() {
                             onChange={(value) => updateConfig('seo', 'twitterHandle', value)}
                             placeholder="@username"
                             description="Twitter Card作者信息"
+                            disabled={isProduction}
                         />
                     </div>
                 </ConfigSection>

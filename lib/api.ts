@@ -14,6 +14,39 @@ async function getApiSettings() {
     }
 }
 
+// Function to dump all posts to a JSON file for search indexing
+export async function exportAllPostsForIndex() {
+    if (process.env.GENERATE_SEARCH_INDEX_DATA === 'true') {
+        console.log('📦 Exporting all posts to all-posts-for-index.json...');
+        // Attempt to get all posts - potentially many pages if not mocked
+        // For simplicity with current getAllPosts, we'll fetch a large number.
+        // In a real scenario with many posts, this would need proper pagination.
+        const allPostsData = await getAllPosts(1, 10000); // Assuming up to 10000 posts for now
+
+        try {
+            const fs = await import('fs');
+            const path = await import('path');
+            // Ensure the directory exists (though fs.writeFileSync will create the file, not dir)
+            const outputDir = path.resolve(process.cwd()); // project root
+            const outputFile = path.join(outputDir, 'all-posts-for-index.json');
+
+            fs.writeFileSync(outputFile, JSON.stringify(allPostsData, null, 2));
+            console.log(`✅ Successfully exported ${allPostsData.length} posts to ${outputFile}`);
+        } catch (error) {
+            console.error('❌ Error exporting posts to JSON:', error);
+            process.exit(1); // Exit if we can't create the data file
+        }
+    }
+}
+
+// Potentially call this if the script is run directly with the env var
+if (process.env.GENERATE_SEARCH_INDEX_DATA === 'true' && require.main === module) {
+    exportAllPostsForIndex().catch(err => {
+        console.error(err);
+        process.exit(1);
+    });
+}
+
 // 创建API请求配置
 async function createApiConfig() {
     const { authToken, timeout } = await getApiSettings()
@@ -694,12 +727,16 @@ export async function getBlogStats(): Promise<{
     recentActivity: number
 }> {
     try {
+        // TODO: Enhance error handling. Consider throwing an error or returning null/undefined
+        // if critical API calls fail, allowing the caller to distinguish "no data" from "error fetching data".
+        // Currently, errors in getIssues will result in empty arrays and thus zeroed stats.
+
         // 获取所有文章进行统计 - 分别获取开放和关闭的issues
         const [openIssues, closedIssues] = await Promise.all([
-            getIssues({ page_size: 500, state: 'open' }),
-            getIssues({ page_size: 500, state: 'closed' })
-        ])
-        const allIssues = [...openIssues, ...closedIssues]
+            getIssues({ page_size: 500, state: 'open' }), // Fetches up to 500 open issues
+            getIssues({ page_size: 500, state: 'closed' }) // Fetches up to 500 closed issues
+        ]);
+        const allIssues = [...openIssues, ...closedIssues];
         const authors = new Set<string>()
         const tags = new Set<string>()
         const postsByPriority: Record<string, number> = {}

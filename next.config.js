@@ -12,6 +12,7 @@ const nextConfig = {
         REPO: process.env.REPO,
         AUTH_TOKEN: process.env.AUTH_TOKEN,
     },
+    // Webpack configuration removed
 }
 
 module.exports = nextConfig

@@ -12,85 +12,27 @@ async function fetchConfig(): Promise<BlogConfig> {
         return clientConfig
     }
 
-    try {
-        // 在静态导出模式下，尝试从API获取配置
-        const response = await fetch('/api/config')
-        if (!response.ok) {
-            throw new Error('Failed to fetch config')
-        }
-        const config = await response.json()
-
-        // 如果API返回错误，使用默认配置
-        if (config.error) {
-            throw new Error(config.error)
-        }
-
-        clientConfig = config
-        return config
-    } catch (error) {
-        console.warn('从API获取配置失败，使用默认配置:', error)
-        // 返回默认配置
-        const defaultConfig = getDefaultClientConfig()
-        clientConfig = defaultConfig
-        return defaultConfig
+    // No try-catch here; let errors propagate to the caller (useConfig hook)
+    // In static export, /api/config should always be available as it's pre-rendered.
+    // If it fails, it's a more significant issue than just falling back to client defaults.
+    const response = await fetch('/api/config');
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to fetch config:', response.status, errorText);
+        throw new Error(`配置接口请求失败: ${response.status} ${response.statusText}. ${errorText}`);
     }
+
+    const config = await response.json();
+    if (config.error) { // Should match the error structure from GET /api/config
+        console.error('Error field in config response:', config.error);
+        throw new Error(config.error);
+    }
+
+    clientConfig = config;
+    return config;
 }
 
-// 获取默认客户端配置
-function getDefaultClientConfig(): BlogConfig {
-    return {
-        site: {
-            title: 'CNB博客',
-            description: '基于CNB Issues API的现代化静态博客',
-            url: typeof window !== 'undefined' ? window.location.origin : 'https://blog.cnb.cool',
-            author: 'CNB Team',
-        },
-        api: {
-            baseUrl: 'https://api.cnb.cool',
-            repo: 'cnb.ai/testblog',
-            timeout: 10000,
-            retries: 3,
-        },
-        content: {
-            postsPerPage: 10,
-            excerptLength: 200,
-            showReadingTime: true,
-            showAuthor: true,
-            showDate: true,
-            showTags: true,
-            enableComments: true,
-            enableSearch: true,
-        },
-        markdown: {
-            enableCodeHighlight: true,
-            enableMath: true,
-            enableToc: true,
-            enableTaskList: true,
-            codeTheme: 'default',
-            mathRenderer: 'katex',
-        },
-        theme: {
-            primaryColor: '#3b82f6',
-            darkMode: 'auto',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: 'base',
-            layout: 'default',
-        },
-        seo: {
-            enableSitemap: true,
-            enableRobots: true,
-            enableJsonLd: true,
-        },
-        features: {
-            newsletter: true,
-            analytics: false,
-            pwa: true,
-            rss: true,
-            socialShare: true,
-            showHomepageStats: true, // 与 lib/config.ts 中的 defaultConfig 保持一致
-        },
-    }
-}
+// getDefaultClientConfig function removed.
 
 // 主配置Hook
 export function useConfig() {
@@ -100,10 +42,14 @@ export function useConfig() {
 
     useEffect(() => {
         fetchConfig()
-            .then(setConfig)
+            .then(data => {
+                setConfig(data);
+                setError(null); // Clear previous errors on success
+            })
             .catch((err) => {
-                setError(err.message)
-                setConfig(getDefaultClientConfig())
+                console.error("useConfig - fetchConfig error:", err);
+                setError(err.message || '获取配置时发生未知错误');
+                setConfig(null); // Set config to null on error
             })
             .finally(() => setLoading(false))
     }, [])

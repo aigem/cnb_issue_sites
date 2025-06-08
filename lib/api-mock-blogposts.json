@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "1",
+    "title": "Mock Post 1: Exploring Next.js for Search",
+    "content": "This is the full markdown content of mock post 1 about Next.js. It includes various terms like JavaScript, React, and static site generation. This content will be indexed.",
+    "tags": [{ "name": "Next.js" }, { "name": "mock" }],
+    "excerpt": "A short excerpt for mock post 1 about Next.js and search indexing."
+  },
+  {
+    "slug": "2",
+    "title": "Mock Post 2: Mastering TypeScript with FlexSearch",
+    "content": "Content for mock post 2. This post discusses TypeScript in the context of client-side search solutions like FlexSearch. #TypeScript #FlexSearch are important keywords.",
+    "tags": [{ "name": "TypeScript" }, { "name": "FlexSearch" }],
+    "excerpt": "An excerpt detailing how TypeScript can be used with FlexSearch."
+  },
+  {
+    "slug": "3",
+    "title": "中文测试：博客系统的搜索功能",
+    "content": "这是一篇关于在博客系统中实现中文搜索功能的模拟文章。我们将测试 FlexSearch 对中文内容的分词和索引效果。关键词包括：中文搜索，静态站点，客户端索引。",
+    "tags": [{ "name": "中文" }, { "name": "搜索" }],
+    "excerpt": "测试 FlexSearch 对中文内容的索引和搜索效果。"
+  }
+]

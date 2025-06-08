@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { getIssues, getFeaturedIssues, getLatestIssues } from '@/lib/api'
+import { getFeaturedIssues, getLatestIssues, getBlogStats } from '@/lib/api'
 import { issueToBlogPost } from '@/lib/utils'
 import { getFeaturesConfig, getSiteConfig, getSeoConfig } from '@/lib/config'
 import { HeroSection } from '@/components/hero-section'
@@ -30,11 +30,20 @@ async function getLatestPostsData(): Promise<BlogPost[]> {
 }
 
 export default async function HomePage() {
-    const [featuredPosts, latestPosts] = await Promise.all([
+    const [featuredPosts, latestPosts, blogStats] = await Promise.all([
         getFeaturedPostsData(),
         getLatestPostsData(),
+        getBlogStats(), // Fetch blog statistics
     ])
     const featuresConfig = await getFeaturesConfig()
+
+    // Helper function to format large numbers
+    const formatStatNumber = (num: number): string => {
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'k+'
+        }
+        return num.toString() + '+'
+    }
 
     return (
         <div className="min-h-screen">
@@ -110,21 +119,27 @@ export default async function HomePage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                             <div>
                                 <div className="text-3xl font-bold text-primary mb-2">
-                                    {latestPosts.length}+
+                                    {formatStatNumber(blogStats.totalPosts)}
                                 </div>
                                 <div className="text-muted-foreground">技术文章</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-bold text-primary mb-2">50K+</div>
-                                <div className="text-muted-foreground">月度访问</div>
+                                <div className="text-3xl font-bold text-primary mb-2">
+                                    {formatStatNumber(blogStats.totalComments)}
+                                </div>
+                                <div className="text-muted-foreground">总评论数</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-bold text-primary mb-2">1K+</div>
-                                <div className="text-muted-foreground">开发者关注</div>
+                                <div className="text-3xl font-bold text-primary mb-2">
+                                    {formatStatNumber(blogStats.totalAuthors)}
+                                </div>
+                                <div className="text-muted-foreground">贡献作者</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-bold text-primary mb-2">100+</div>
-                                <div className="text-muted-foreground">技术话题</div>
+                                <div className="text-3xl font-bold text-primary mb-2">
+                                    {formatStatNumber(blogStats.totalTags)}
+                                </div>
+                                <div className="text-muted-foreground">技术标签</div>
                             </div>
                         </div>
                     </div>
