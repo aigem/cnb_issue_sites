@@ -1,0 +1,420 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* KaTeX 数学公式样式 */
+@import 'katex/dist/katex.min.css';
+
+/* Prism 代码高亮样式 */
+@import 'prismjs/themes/prism-tomorrow.css';
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 221.2 83.2% 53.3%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222.2 84% 4.9%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96%;
+        --accent-foreground: 222.2 84% 4.9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 221.2 83.2% 53.3%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 217.2 91.2% 59.8%;
+        --primary-foreground: 222.2 84% 4.9%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 224.3 76.3% 94.1%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+    }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-foreground;
+}
+
+/* 代码高亮样式 */
+pre {
+    @apply bg-muted p-4 rounded-lg overflow-x-auto;
+}
+
+code {
+    @apply bg-muted px-1 py-0.5 rounded text-sm;
+}
+
+pre code {
+    @apply bg-transparent p-0;
+}
+
+/* 文章内容样式 */
+.prose {
+    @apply max-w-none;
+}
+
+.prose h1 {
+    @apply text-3xl font-bold mb-4 mt-8 first:mt-0;
+}
+
+.prose h2 {
+    @apply text-2xl font-semibold mb-3 mt-6;
+}
+
+.prose h3 {
+    @apply text-xl font-semibold mb-2 mt-4;
+}
+
+.prose h4 {
+    @apply text-lg font-semibold mb-2 mt-4;
+}
+
+.prose p {
+    @apply mb-4 leading-7;
+}
+
+.prose ul,
+.prose ol {
+    @apply mb-4 pl-6;
+}
+
+.prose li {
+    @apply mb-1;
+}
+
+.prose blockquote {
+    @apply border-l-4 border-primary pl-4 italic my-4;
+}
+
+.prose a {
+    @apply text-primary hover:underline;
+}
+
+.prose img {
+    @apply rounded-lg my-4;
+}
+
+.prose table {
+    @apply w-full border-collapse border border-border my-4;
+}
+
+.prose th,
+.prose td {
+    @apply border border-border px-3 py-2;
+}
+
+.prose th {
+    @apply bg-muted font-semibold;
+}
+
+/* 加载动画 */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* 搜索高亮 */
+mark {
+    @apply bg-yellow-200 dark:bg-yellow-800 px-1 rounded;
+}
+
+/* 阅读进度条 */
+.reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(to right, hsl(var(--primary)) var(--progress, 0%), transparent var(--progress, 0%));
+    z-index: 50;
+}
+
+/* 响应式图片 */
+.responsive-image {
+    @apply w-full h-auto rounded-lg;
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+}
+
+/* 按钮动画 */
+.button-press {
+    @apply transition-transform duration-150 active:scale-95;
+}
+
+/* 标签样式 */
+.tag {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+/* 徽章样式 */
+.badge {
+    @apply inline-flex items-center px-2 py-1 rounded-md text-xs font-medium;
+}
+
+/* 分割线 */
+.divider {
+    @apply border-t border-border my-6;
+}
+
+/* 居中容器 */
+.container-center {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* 文本省略 */
+.text-ellipsis {
+    @apply truncate;
+}
+
+.text-ellipsis-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.text-ellipsis-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 骨架屏动画 */
+@keyframes skeleton {
+    0% {
+        background-position: -200px 0;
+    }
+
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.1) 50%, hsl(var(--muted)) 75%);
+    background-size: 200px 100%;
+    animation: skeleton 1.5s infinite;
+}
+
+/* 打印样式 */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        @apply text-black bg-white;
+    }
+
+    .prose a {
+        @apply text-black no-underline;
+    }
+
+    .prose a:after {
+        content: " (" attr(href) ")";
+        @apply text-sm text-gray-600;
+    }
+}
+
+/* 增强的 Markdown 样式 */
+/* 代码块样式增强 */
+.code-block-wrapper {
+    @apply rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 my-6;
+}
+
+.copy-code-btn {
+    @apply px-3 py-1 rounded text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors;
+}
+
+/* 数学公式样式 */
+.math-block {
+    @apply overflow-x-auto my-6 text-center;
+}
+
+/* 任务列表样式 */
+.task-list-item {
+    @apply flex items-start;
+    list-style: none;
+}
+
+.task-list-item input[type="checkbox"] {
+    @apply mt-1 mr-2;
+}
+
+/* 表格样式增强 */
+.prose table {
+    @apply w-full border-collapse my-6;
+}
+
+.prose th {
+    @apply px-4 py-2 text-left font-semibold bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700;
+}
+
+.prose td {
+    @apply px-4 py-2 border border-gray-200 dark:border-gray-700;
+}
+
+/* KaTeX 暗色主题适配 */
+.dark .katex {
+    color: rgb(229 231 235);
+}
+
+.dark .katex .mord {
+    color: rgb(229 231 235);
+}
+
+.dark .katex .mbin,
+.dark .katex .mrel {
+    color: rgb(156 163 175);
+}
+
+/* Prism 暗色主题适配 */
+.dark pre[class*="language-"] {
+    background: rgb(17 24 39) !important;
+}
+
+.dark code[class*="language-"] {
+    color: rgb(229 231 235) !important;
+}
+
+/* 目录样式 */
+.toc-active {
+    @apply text-primary font-medium border-l-2 border-primary pl-3;
+}
+
+/* 引用块增强样式 */
+.prose blockquote {
+    @apply border-l-4 border-blue-500 pl-4 py-2 my-6 bg-blue-50 dark:bg-blue-900/20 italic text-gray-700 dark:text-gray-300;
+}
+
+/* 链接样式增强 */
+.prose a {
+    @apply text-primary hover:text-primary/80 no-underline transition-colors;
+}
+
+.prose a:hover {
+    @apply underline;
+}
+
+/* 图片样式增强 */
+.prose img {
+    @apply max-w-full h-auto rounded-lg shadow-sm my-6;
+}
+
+/* 行内代码样式 */
+.prose code:not(pre code) {
+    @apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+/* 标题锚点样式 */
+.prose h1[id],
+.prose h2[id],
+.prose h3[id],
+.prose h4[id],
+.prose h5[id],
+.prose h6[id] {
+    @apply scroll-mt-24;
+}
+
+.prose h1[id]:hover::before,
+.prose h2[id]:hover::before,
+.prose h3[id]:hover::before,
+.prose h4[id]:hover::before,
+.prose h5[id]:hover::before,
+.prose h6[id]:hover::before {
+    content: "#";
+    @apply absolute -ml-6 text-gray-400 hover:text-primary cursor-pointer;
+}
+
+/* 列表样式增强 */
+.prose ul {
+    @apply list-disc list-inside mb-4 space-y-2;
+}
+
+.prose ol {
+    @apply list-decimal list-inside mb-4 space-y-2;
+}
+
+.prose li {
+    @apply leading-relaxed;
+}
+
+/* 段落样式 */
+.prose p {
+    @apply mb-4 leading-relaxed text-gray-700 dark:text-gray-300;
+}

@@ -1,0 +1,57 @@
+{
+    "site": {
+        "title": "CNB技术博客",
+        "description": "分享前沿技术，探索创新思维",
+        "url": "https://blog.cnb.cool",
+        "author": "CNB团队",
+        "email": "contact@cnb.cool",
+        "logo": "/logo.png",
+        "favicon": "/favicon.ico"
+    },
+    "api": {
+        "baseUrl": "https://api.cnb.cool",
+        "repo": "cnb.ai/testblog",
+        "timeout": 10000,
+        "retries": 3
+    },
+    "content": {
+        "postsPerPage": 12,
+        "excerptLength": 180,
+        "showReadingTime": true,
+        "showAuthor": true,
+        "showDate": true,
+        "showTags": true,
+        "enableComments": true,
+        "enableSearch": true
+    },
+    "markdown": {
+        "enableCodeHighlight": true,
+        "enableMath": true,
+        "enableToc": true,
+        "enableTaskList": true,
+        "codeTheme": "default",
+        "mathRenderer": "katex"
+    },
+    "theme": {
+        "primaryColor": "#2563eb",
+        "darkMode": "auto",
+        "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+        "fontSize": "base",
+        "layout": "default"
+    },
+    "seo": {
+        "enableSitemap": true,
+        "enableRobots": true,
+        "enableJsonLd": true,
+        "defaultImage": "/og-image.png",
+        "twitterHandle": "@cnb_cool"
+    },
+    "features": {
+        "newsletter": false,
+        "analytics": false,
+        "pwa": true,
+        "rss": true,
+        "socialShare": true,
+        "showHomepageStats": true
+    }
+}
