@@ -46,7 +46,11 @@ function InputField({ label, value, onChange, type = 'text', placeholder, descri
                 value={value}
                 onChange={(e) => onChange(type === 'number' ? Number(e.target.value) : e.target.value)}
                 placeholder={placeholder}
-                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 ${disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}`}
+                className={`w-full px-3 py-2 border border-input bg-background rounded-md shadow-sm
+                           focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring
+                           dark:border-input dark:bg-background
+                           transition-colors duration-150 ease-in-out
+                           ${disabled ? 'bg-muted dark:bg-muted cursor-not-allowed' : ''}`}
                 disabled={disabled}
                 readOnly={disabled}
             />
@@ -77,7 +81,11 @@ function SelectField({ label, value, onChange, options, description, disabled = 
             <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 ${disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}`}
+                className={`w-full px-3 py-2 border border-input bg-background rounded-md shadow-sm
+                           focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring
+                           dark:border-input dark:bg-background
+                           transition-colors duration-150 ease-in-out
+                           ${disabled ? 'bg-muted dark:bg-muted cursor-not-allowed' : ''}`}
                 disabled={disabled}
             >
                 {options.map((option) => (
@@ -111,7 +119,12 @@ function CheckboxField({ label, checked, onChange, description, disabled = false
                     type="checkbox"
                     checked={checked}
                     onChange={(e) => onChange(e.target.checked)}
-                    className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 ${disabled ? 'cursor-not-allowed' : ''}`}
+                    className={`w-4 h-4 text-primary bg-muted border-input rounded
+                               focus:ring-ring dark:focus:ring-ring
+                               dark:ring-offset-background focus:ring-2
+                               dark:bg-muted dark:border-input
+                               transition-colors duration-150 ease-in-out
+                               ${disabled ? 'cursor-not-allowed' : ''}`}
                     disabled={disabled}
                 />
             </div>

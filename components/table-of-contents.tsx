@@ -82,10 +82,10 @@ export function TableOfContents({ toc, className = '' }: TableOfContentsProps) {
                                 key={item.id}
                                 onClick={() => scrollToHeading(item.id)}
                                 className={`
-                  block w-full text-left text-sm transition-colors hover:text-primary
+                  block w-full text-left text-sm transition-colors
                   ${activeId === item.id
-                                        ? 'text-primary font-medium border-l-2 border-primary pl-3'
-                                        : 'text-muted-foreground hover:text-foreground pl-3'
+                                        ? 'text-primary font-medium border-l-2 border-primary pl-3' // Active state
+                                        : 'text-muted-foreground hover:text-primary pl-3' // Default state, updated hover
                                     }
                   ${item.level === 1 ? 'font-semibold' : ''}
                   ${item.level === 2 ? 'ml-2' : ''}
@@ -124,7 +124,7 @@ export function SimpleToc({ toc }: { toc: TocItem[] }) {
                     </svg>
                 </div>
             </summary>
-            <div className="mt-3 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+            <div className="mt-3 pl-4 border-l-2 border-border"> {/* Updated border color */}
                 {toc.map((item) => (
                     <a
                         key={item.id}

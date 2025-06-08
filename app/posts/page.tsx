@@ -8,8 +8,10 @@ import Link from 'next/link'
 
 // 文章卡片组件
 function PostCard({ post }: { post: any }) {
+    // The Card component from ui/card already has shadow-md.
+    // We can enhance the hover effect here.
     return (
-        <Card className="h-full hover:shadow-lg transition-shadow">
+        <Card className="h-full hover:shadow-xl transition-shadow duration-300 ease-in-out"> {/* Enhanced hover shadow */}
             <CardHeader>
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex flex-wrap gap-2">

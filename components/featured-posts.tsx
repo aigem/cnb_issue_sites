@@ -19,7 +19,7 @@ export function FeaturedPosts({ posts }: FeaturedPostsProps) {
     const [mainPost, ...otherPosts] = posts
 
     return (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 md:gap-8 lg:grid-cols-2"> {/* Updated gap */}
             {/* 主要精选文章 */}
             {mainPost && (
                 <Card className="lg:row-span-2 card-hover">
@@ -35,7 +35,7 @@ export function FeaturedPosts({ posts }: FeaturedPostsProps) {
                         )}
                         <CardHeader>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                                <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
+                                <span className="px-2 py-1 bg-accent/20 text-accent-foreground dark:bg-accent/30 dark:text-accent-foreground rounded text-xs font-medium"> {/* Updated to use accent color */}
                                     精选
                                 </span>
                                 <time dateTime={mainPost.publishedAt}>

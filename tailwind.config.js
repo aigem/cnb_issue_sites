@@ -70,6 +70,10 @@ module.exports = {
                 "accordion-down": "accordion-down 0.2s ease-out",
                 "accordion-up": "accordion-up 0.2s ease-out",
             },
+            fontFamily: { // Added fontFamily
+                sans: ["var(--font-sans)", "Inter", "sans-serif"], // Assuming --font-sans is Inter, provide fallbacks
+                mono: ['JetBrains Mono', 'Fira Code', 'ui-monospace', 'monospace'],
+            },
         },
     },
     plugins: [require("tailwindcss-animate")],

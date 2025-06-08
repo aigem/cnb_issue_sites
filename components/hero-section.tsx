@@ -58,22 +58,22 @@ export function HeroSection() {
 
                     {/* 特色标签 */}
                     <div className="flex flex-wrap justify-center gap-3 text-sm">
-                        <span className="px-3 py-1 bg-primary/10 text-primary rounded-full">
+                        <span className="px-3 py-1 bg-accent/20 text-accent-foreground dark:bg-accent/30 dark:text-accent-foreground rounded-full">
                             React
                         </span>
-                        <span className="px-3 py-1 bg-primary/10 text-primary rounded-full">
+                        <span className="px-3 py-1 bg-accent/20 text-accent-foreground dark:bg-accent/30 dark:text-accent-foreground rounded-full">
                             Next.js
                         </span>
-                        <span className="px-3 py-1 bg-primary/10 text-primary rounded-full">
+                        <span className="px-3 py-1 bg-accent/20 text-accent-foreground dark:bg-accent/30 dark:text-accent-foreground rounded-full">
                             TypeScript
                         </span>
-                        <span className="px-3 py-1 bg-primary/10 text-primary rounded-full">
+                        <span className="px-3 py-1 bg-accent/20 text-accent-foreground dark:bg-accent/30 dark:text-accent-foreground rounded-full">
                             Node.js
                         </span>
-                        <span className="px-3 py-1 bg-primary/10 text-primary rounded-full">
+                        <span className="px-3 py-1 bg-accent/20 text-accent-foreground dark:bg-accent/30 dark:text-accent-foreground rounded-full">
                             云原生
                         </span>
-                        <span className="px-3 py-1 bg-primary/10 text-primary rounded-full">
+                        <span className="px-3 py-1 bg-accent/20 text-accent-foreground dark:bg-accent/30 dark:text-accent-foreground rounded-full">
                             微服务
                         </span>
                     </div>

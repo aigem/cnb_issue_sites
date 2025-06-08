@@ -55,20 +55,17 @@ renderer.image = function (href, title, text) {
     const titleAttr = title ? ` title="${title}"` : ''
     const altAttr = text ? ` alt="${text}"` : ''
 
-    return `<img src="${href}"${altAttr}${titleAttr} loading="lazy" class="max-w-full h-auto rounded-lg shadow-sm" />`
+    return `<img src="${href}"${altAttr}${titleAttr} loading="lazy" class="max-w-full h-auto rounded-lg shadow-md mx-auto block my-6" />` // Added mx-auto, block, shadow-md, and my-6 for margin
 }
 
 // 增强表格渲染 - 添加样式类
 renderer.table = function (header, body) {
+    // Rely on global .prose table styles for borders, padding, and th background
     return `
     <div class="overflow-x-auto my-6">
-      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-800">
-          ${header}
-        </thead>
-        <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-          ${body}
-        </tbody>
+      <table class="min-w-full">
+        <thead>${header}</thead>
+        <tbody>${body}</tbody>
       </table>
     </div>
   `
@@ -82,18 +79,23 @@ renderer.code = function (code, language, escaped) {
         : code
 
     return `
-    <div class="code-block-wrapper relative my-6">
-      <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-t-lg">
-        <span class="text-sm font-medium text-gray-600 dark:text-gray-300">${lang}</span>
+    <div class="code-block-wrapper relative my-6 rounded-lg border border-border"> {/* Added border and rounded to wrapper */}
+      <div class="flex items-center justify-between bg-muted px-4 py-2 border-b border-border"> {/* Changed background and added border */}
+        <span class="text-sm font-medium text-muted-foreground">${lang}</span>
         <button 
-          class="copy-code-btn text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          class="copy-code-btn text-xs px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground" /* Styled like a small ghost button */
           onclick="copyToClipboard(this)"
           data-code="${code.replace(/"/g, '"')}"
         >
-          复制代码
+          Copy
         </button>
       </div>
-      <pre class="bg-gray-900 text-gray-100 p-4 rounded-b-lg overflow-x-auto"><code class="language-${lang}">${highlightedCode}</code></pre>
+      {/* The pre tag itself will be styled by Prism theme / global CSS.
+          The bg-muted/50 dark:bg-muted/30 will be for the container if Prism theme is transparent.
+          Or, remove bg from pre and let Prism's own background take over fully.
+          Let's make <pre> have a subtle background that Prism can paint over.
+      */}
+      <pre class="bg-muted/20 dark:bg-muted/10 p-4 rounded-b-lg overflow-x-auto"><code class="language-${lang}">${highlightedCode}</code></pre>
     </div>
   `
 }
@@ -101,7 +103,7 @@ renderer.code = function (code, language, escaped) {
 // 增强引用渲染 - 添加样式
 renderer.blockquote = function (quote) {
     return `
-    <blockquote class="border-l-4 border-blue-500 pl-4 py-2 my-6 bg-blue-50 dark:bg-blue-900/20 italic text-gray-700 dark:text-gray-300">
+    <blockquote class="border-l-4 border-accent pl-4 py-3 my-6 bg-muted dark:bg-muted/50 italic text-muted-foreground">
       ${quote}
     </blockquote>
   `
@@ -201,18 +203,24 @@ export function markdownToHtml(markdown: string): string {
         // 后处理：任务列表
         html = renderTaskLists(html)
 
-        // 添加一些通用样式类
+        // Adding minimal structural classes, relying on global styles for typography and color
         html = html
-            .replace(/<p>/g, '<p class="mb-4 leading-relaxed">')
+            // Paragraphs will use global styles from app/globals.css
+            // Lists - keep current specific styling for lists
             .replace(/<ul>/g, '<ul class="list-disc list-inside mb-4 space-y-2">')
             .replace(/<ol>/g, '<ol class="list-decimal list-inside mb-4 space-y-2">')
             .replace(/<li>/g, '<li class="leading-relaxed">')
-            .replace(/<h1>/g, '<h1 class="text-4xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100">')
-            .replace(/<h2>/g, '<h2 class="text-3xl font-bold mb-4 mt-6 text-gray-900 dark:text-gray-100">')
-            .replace(/<h3>/g, '<h3 class="text-2xl font-bold mb-3 mt-5 text-gray-900 dark:text-gray-100">')
-            .replace(/<h4>/g, '<h4 class="text-xl font-bold mb-2 mt-4 text-gray-900 dark:text-gray-100">')
-            .replace(/<h5>/g, '<h5 class="text-lg font-bold mb-2 mt-3 text-gray-900 dark:text-gray-100">')
-            .replace(/<h6>/g, '<h6 class="text-base font-bold mb-2 mt-2 text-gray-900 dark:text-gray-100">')
+            // Headings - remove specific text color, size, margin, leading. Rely on global h1-h6 styles.
+            // Keep font-bold if desired, but global styles already set font-semibold.
+            // For simplicity, just ensure the tags are there. Global styles will apply.
+            // .replace(/<h1>/g, '<h1 class="font-bold">') // Example if only bold was needed
+            // .replace(/<h2>/g, '<h2 class="font-bold">')
+            // .replace(/<h3>/g, '<h3 class="font-bold">')
+            // .replace(/<h4>/g, '<h4 class="font-bold">')
+            // .replace(/<h5>/g, '<h5 class="font-bold">')
+            // .replace(/<h6>/g, '<h6 class="font-bold">')
+            // No specific class changes for h1-h6 and p needed here if global styles are comprehensive.
+            // The default marked output (e.g. <h1>Title</h1>) will be styled by globals.css.
 
         return html
     } catch (error) {
@@ -250,18 +258,15 @@ export async function renderMarkdownWithConfig(markdown: string): Promise<string
             html = renderTaskLists(html)
         }
 
-        // 添加样式类
+        // Adding minimal structural classes, relying on global styles for typography and color
         html = html
-            .replace(/<p>/g, '<p class="mb-4 leading-relaxed">')
+            // Paragraphs will use global styles from app/globals.css
+            // Lists - keep current specific styling for lists
             .replace(/<ul>/g, '<ul class="list-disc list-inside mb-4 space-y-2">')
             .replace(/<ol>/g, '<ol class="list-decimal list-inside mb-4 space-y-2">')
             .replace(/<li>/g, '<li class="leading-relaxed">')
-            .replace(/<h1>/g, '<h1 class="text-4xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100">')
-            .replace(/<h2>/g, '<h2 class="text-3xl font-bold mb-4 mt-6 text-gray-900 dark:text-gray-100">')
-            .replace(/<h3>/g, '<h3 class="text-2xl font-bold mb-3 mt-5 text-gray-900 dark:text-gray-100">')
-            .replace(/<h4>/g, '<h4 class="text-xl font-bold mb-2 mt-4 text-gray-900 dark:text-gray-100">')
-            .replace(/<h5>/g, '<h5 class="text-lg font-bold mb-2 mt-3 text-gray-900 dark:text-gray-100">')
-            .replace(/<h6>/g, '<h6 class="text-base font-bold mb-2 mt-2 text-gray-900 dark:text-gray-100">')
+            // Headings - remove specific text color, size, margin, leading. Rely on global h1-h6 styles.
+            // No specific class changes for h1-h6 and p needed here if global styles are comprehensive.
 
         return html
     } catch (error) {

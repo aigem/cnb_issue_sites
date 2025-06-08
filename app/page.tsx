@@ -79,7 +79,7 @@ export default async function HomePage() {
                         </div>
                         <a
                             href="/posts"
-                            className="inline-flex items-center text-primary hover:text-primary/80 font-medium"
+                            className="inline-flex items-center text-primary hover:text-accent underline-offset-4 hover:underline font-medium group" // Changed hover, added group for icon
                         >
                             查看全部
                             <svg
