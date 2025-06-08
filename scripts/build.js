@@ -31,74 +31,66 @@ function loadEnvFile(filePath) {
   }
 }
 
-// 设置环境变量（优先使用系统环境变量）
-function setupEnvironmentVariables() {
-  // 设置BASE_URL
-  if (!process.env.BASE_URL) {
-    process.env.BASE_URL = 'https://api.cnb.cool';
-  }
-
-  // 从CNB_REPO_SLUG_LOWERCASE获取REPO值
+// 设置特定CI/部署环境变量（优先使用系统环境变量）
+function setupCIEnvironmentVariables() {
+  // 从CNB_REPO_SLUG_LOWERCASE获取REPO值 (特定CI/部署环境)
+  // 这允许在CI中通过CNB_REPO_SLUG_LOWERCASE设置REPO
   if (process.env.CNB_REPO_SLUG_LOWERCASE && !process.env.REPO) {
     process.env.REPO = process.env.CNB_REPO_SLUG_LOWERCASE;
+    console.log(`🔧 REPO设置为CNB_REPO_SLUG_LOWERCASE的值: ${process.env.REPO}`);
   }
 
-  // 从CNB_TOKEN获取AUTH_TOKEN值
+  // 从CNB_TOKEN获取AUTH_TOKEN值 (特定CI/部署环境)
+  // 这允许在CI中通过CNB_TOKEN设置AUTH_TOKEN
   if (process.env.CNB_TOKEN && !process.env.AUTH_TOKEN) {
     process.env.AUTH_TOKEN = process.env.CNB_TOKEN;
-  }
-
-  // 设置其他默认值
-  if (!process.env.NEXT_PUBLIC_SITE_URL) {
-    process.env.NEXT_PUBLIC_SITE_URL = 'https://blog.kuai.host';
-  }
-
-  if (!process.env.NEXT_PUBLIC_SITE_NAME) {
-    process.env.NEXT_PUBLIC_SITE_NAME = 'CNB博客';
-  }
-
-  if (!process.env.NEXT_PUBLIC_SITE_DESCRIPTION) {
-    process.env.NEXT_PUBLIC_SITE_DESCRIPTION = '分享技术见解、编程经验和创新思考的中文技术博客';
-  }
-
-  if (!process.env.NEXT_PUBLIC_POSTS_PER_PAGE) {
-    process.env.NEXT_PUBLIC_POSTS_PER_PAGE = '12';
-  }
-
-  if (!process.env.NEXT_PUBLIC_FEATURED_POSTS_COUNT) {
-    process.env.NEXT_PUBLIC_FEATURED_POSTS_COUNT = '6';
+    console.log('🔧 AUTH_TOKEN设置为CNB_TOKEN的值');
   }
 }
 
-// 首先设置环境变量
-setupEnvironmentVariables();
-
-// 然后加载 .env.local 文件（如果存在，但不会覆盖已有的环境变量）
+// 1. 加载 .env.local 文件（如果存在，但不会覆盖已通过其他方式设置的系统环境变量）
 loadEnvFile('.env.local');
 
-console.log('🔧 环境变量配置:');
-console.log(`   BASE_URL: ${process.env.BASE_URL}`);
-console.log(`   REPO: ${process.env.REPO}`);
-console.log(`   AUTH_TOKEN: ${process.env.AUTH_TOKEN ? '***已设置***' : '未设置'}`);
-console.log(`   CNB_REPO_SLUG_LOWERCASE: ${process.env.CNB_REPO_SLUG_LOWERCASE || '未设置'}`);
-console.log(`   CNB_TOKEN: ${process.env.CNB_TOKEN ? '***已设置***' : '未设置'}`);
-console.log(`   NEXT_PUBLIC_SITE_URL: ${process.env.NEXT_PUBLIC_SITE_URL}\n`);
+// 2. 设置特定CI/部署环境变量 (可能会覆盖.env.local中的值，如果CI变量已设置)
+setupCIEnvironmentVariables();
 
-// 验证必需的环境变量
-const requiredEnvVars = ['BASE_URL', 'REPO', 'AUTH_TOKEN'];
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+console.log('🔧 应用环境变量摘要:');
+console.log(`   BASE_URL: ${process.env.BASE_URL || '未设置 (将从lib/config.ts获取默认值)'}`);
+console.log(`   REPO: ${process.env.REPO || '未设置 (构建将失败)'}`);
+console.log(`   AUTH_TOKEN: ${process.env.AUTH_TOKEN ? '***已设置***' : '未设置 (构建将失败)'}`);
+if (process.env.CNB_REPO_SLUG_LOWERCASE) {
+  console.log(`   (CI) CNB_REPO_SLUG_LOWERCASE: ${process.env.CNB_REPO_SLUG_LOWERCASE}`);
+}
+if (process.env.CNB_TOKEN) {
+  console.log(`   (CI) CNB_TOKEN: ***已设置***`);
+}
+console.log('   其他NEXT_PUBLIC_*变量将由lib/config.ts处理 (默认值, blog.config.json, 或环境变量)\n');
+
+// 验证构建过程必需的环境变量
+// BASE_URL也由lib/config.ts处理其默认值，但如果API在构建时就需要，则可能需要检查
+// 对于此项目，API调用主要在运行时或getStaticProps/getServerSideProps，
+// 但next.config.js中的env使其在构建时可用。
+// lib/config.ts会提供默认值，所以这里不强制检查BASE_URL。
+const criticalEnvVars = ['REPO', 'AUTH_TOKEN'];
+const missingVars = criticalEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
-  console.error('❌ 缺少必需的环境变量:');
+  console.error('❌ 缺少构建过程必需的环境变量:');
   missingVars.forEach(varName => {
     console.error(`   - ${varName}`);
   });
-  console.error('\n请设置以下环境变量：');
-  console.error('   - CNB_REPO_SLUG_LOWERCASE (用于REPO)');
-  console.error('   - CNB_TOKEN (用于AUTH_TOKEN)');
-  console.error('\n或者创建 .env.local 文件包含这些变量');
+  console.error('\n请确保以下环境变量已设置 (例如, 在.env.local文件或系统环境变量中):');
+  console.error('   - REPO (或者通过CNB_REPO_SLUG_LOWERCASE在CI中设置)');
+  console.error('   - AUTH_TOKEN (或者通过CNB_TOKEN在CI中设置)');
+  console.error('\nCNB博客构建失败。');
   process.exit(1);
 }
+
+// BASE_URL的检查被移除，因为lib/config.ts有默认值。
+// 如果特定构建步骤绝对需要它，并且不能依赖lib/config.ts的默认值，
+// 则应将其添加回criticalEnvVars。
+
+console.log('✅ 构建过程必需的环境变量已设置。\n');
 
 try {
   // 清理之前的构建
@@ -133,64 +125,18 @@ try {
   // 注意：Next.js 15 的 output: 'export' 会自动导出，不需要单独的 export 命令
   console.log('✅ 静态文件已自动导出到 out 目录');
 
-  // 生成额外的静态文件
-  console.log('📄 生成额外的静态文件...');
-
-  // 生成sitemap.xml
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.cnb.cool';
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${siteUrl}</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${siteUrl}/posts</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${siteUrl}/categories</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${siteUrl}/tags</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${siteUrl}/about</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-</urlset>`;
-
-  fs.writeFileSync('out/sitemap.xml', sitemap);
-
-  // 生成RSS feed
-  const rss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>CNB博客 - 技术分享与思考</title>
-    <description>分享技术见解、编程经验和创新思考的中文技术博客</description>
-    <link>${siteUrl}</link>
-    <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml"/>
-    <language>zh-CN</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <generator>CNB静态博客系统</generator>
-  </channel>
-</rss>`;
-
-  fs.writeFileSync('out/rss.xml', rss);
+  // 生成额外的静态文件 (sitemap.xml and rss.xml are now generated by Next.js Route Handlers)
+  console.log('📄 处理额外的静态文件...');
 
   // 复制robots.txt（如果不存在）
+  // NEXT_PUBLIC_SITE_URL is used here. Ensure it's set for correct Sitemap URL in robots.txt.
+  // It will default to 'https://blog.example.com' if not set, which might be incorrect for production.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.example.com';
+  if (siteUrl === 'https://blog.example.com' && process.env.NODE_ENV === 'production') {
+    console.warn('⚠️  NEXT_PUBLIC_SITE_URL is not set. The Sitemap URL in robots.txt might be incorrect.');
+    console.warn('   Please set NEXT_PUBLIC_SITE_URL in your environment or blog.config.json (site.url).');
+  }
+
   if (!fs.existsSync('out/robots.txt')) {
     const robotsTxt = `User-agent: *
 Allow: /

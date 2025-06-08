@@ -85,6 +85,44 @@ async function apiRequest<T>(endpoint: string, params?: Record<string, any>): Pr
 
 // 获取Issues列表（博客文章列表）
 export async function getIssues(params: IssuesListParams = {}): Promise<Issue[]> {
+    if (process.env.MOCK_API_FOR_BUILD === 'true') {
+        console.log('🚧 Using mock API data for getIssues 🚧');
+        const mockIssues: Issue[] = [
+            {
+                id: 1,
+                number: 1,
+                title: 'Mock Post 1: Exploring Next.js',
+                body: 'This is the full content of mock post 1 about Next.js. Used for slug generation.',
+                state: 'open',
+                created_at: new Date('2023-10-01T10:00:00Z').toISOString(),
+                updated_at: new Date('2023-10-01T12:00:00Z').toISOString(),
+                author: { id: 1, username: 'mockuser', name: 'Mock User' },
+                assignees: [],
+                labels: [{ id: 1, name: 'Next.js', color: '0070F3' }],
+                comments_count: 2,
+            },
+            {
+                id: 2,
+                number: 2,
+                title: 'Mock Post 2: Mastering TypeScript',
+                body: 'Full content of mock post 2 about TypeScript. Used for slug generation.',
+                state: 'open',
+                created_at: new Date('2023-10-05T14:00:00Z').toISOString(),
+                updated_at: new Date('2023-10-05T15:30:00Z').toISOString(),
+                author: { id: 1, username: 'mockuser', name: 'Mock User' },
+                assignees: [],
+                labels: [{ id: 2, name: 'TypeScript', color: '3178C6' }],
+                comments_count: 0,
+            },
+        ];
+        // Simulate pagination for pageSize if needed, though generateStaticParams usually gets many
+        const pageSize = params.page_size || 30;
+        const page = params.page || 1;
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        return Promise.resolve(mockIssues.slice(start, end));
+    }
+
     const defaultParams = {
         state: 'open',
         page: 1,
@@ -188,6 +226,30 @@ export async function searchIssuesEnhanced(params: EnhancedSearchParams = {}): P
 
 // 获取单个Issue详情（博客文章详情）
 export async function getIssue(number: number): Promise<IssueDetail> {
+    if (process.env.MOCK_API_FOR_BUILD === 'true') {
+        console.log(`🚧 Using mock API data for getIssue (number: ${number}) 🚧`);
+        const mockIssuesList: IssueDetail[] = [ // Explicitly type the array
+            {
+                id: 1, number: 1, title: 'Mock Post 1: Exploring Next.js', body: 'Full content for post 1.', state: 'open',
+                created_at: new Date('2023-10-01T10:00:00Z').toISOString(), updated_at: new Date('2023-10-01T12:00:00Z').toISOString(),
+                author: { id: 1, username: 'mockuser', name: 'Mock User' } as UserInfo, assignees: [], labels: [{id: 1, name: 'Next.js', color: '0070F3'}], comments_count: 0,
+                body_html: '<p>Full content for post 1.</p>', comments: []
+            },
+            {
+                id: 2, number: 2, title: 'Mock Post 2: Mastering TypeScript', body: 'Full content for post 2.', state: 'open',
+                created_at: new Date('2023-10-05T14:00:00Z').toISOString(), updated_at: new Date('2023-10-05T15:30:00Z').toISOString(),
+                author: { id: 1, username: 'mockuser', name: 'Mock User' } as UserInfo, assignees: [], labels: [{id: 2, name: 'TypeScript', color: '3178C6'}], comments_count: 0,
+                body_html: '<p>Full content for post 2.</p>', comments: []
+            },
+        ];
+        const foundIssue: IssueDetail | undefined = mockIssuesList.find(p => p.number === number);
+
+        if (foundIssue) {
+            return Promise.resolve(foundIssue);
+        } else {
+            return Promise.reject(new Error(`Mock issue with number ${number} not found`));
+        }
+    }
     return apiRequest<IssueDetail>(`/issues/${number}`)
 }
 
@@ -197,6 +259,11 @@ export async function getIssueComments(
     page: number = 1,
     pageSize: number = 30
 ): Promise<IssueComment[]> {
+    if (process.env.MOCK_API_FOR_BUILD === 'true') {
+        console.log(`🚧 Using mock API data for getIssueComments (number: ${number}) 🚧`);
+        // Return empty comments array for mock by default
+        return Promise.resolve([]);
+    }
     return apiRequest<IssueComment[]>(`/issues/${number}/comments`, {
         page,
         page_size: pageSize,
@@ -348,6 +415,60 @@ function transformIssueToPost(issue: Issue): any {
 
 // 获取所有文章（转换后的格式）
 export async function getAllPosts(page: number = 1, pageSize: number = 30): Promise<BlogPost[]> {
+    if (process.env.MOCK_API_FOR_BUILD === 'true') {
+        console.log('🚧 Using mock API data for getAllPosts 🚧');
+        const mockPosts: BlogPost[] = [
+            {
+                id: 1,
+                number: 1,
+                title: 'Mock Post 1: Exploring Next.js',
+                content: 'This is the full content of mock post 1 about Next.js.',
+                excerpt: 'Short excerpt for mock post 1...',
+                slug: '1-mock-post-1-exploring-next-js',
+                publishedAt: new Date('2023-10-01T10:00:00Z').toISOString(),
+                updatedAt: new Date('2023-10-01T12:00:00Z').toISOString(),
+                author: { id: 1, name: 'Mock User', username: 'mockuser', avatar: 'https://via.placeholder.com/40' },
+                collaborators: [],
+                tags: [{ id: 1, name: 'Next.js', slug: 'next-js', color: '0070F3', count: 1 }],
+                category: 'Web Development',
+                readingTime: 5,
+                featured: true,
+                priority: 'medium',
+                status: 'published',
+                hotness: 10,
+                commentsCount: 2,
+                referenceCount: 1,
+                metadata: {},
+            },
+            {
+                id: 2,
+                number: 2,
+                title: 'Mock Post 2: Mastering TypeScript',
+                content: 'Full content of mock post 2 about TypeScript.',
+                excerpt: 'Short excerpt for mock post 2...',
+                slug: '2-mock-post-2-mastering-typescript',
+                publishedAt: new Date('2023-10-05T14:00:00Z').toISOString(),
+                updatedAt: new Date('2023-10-05T15:30:00Z').toISOString(),
+                author: { id: 1, name: 'Mock User', username: 'mockuser', avatar: 'https://via.placeholder.com/40' },
+                collaborators: [],
+                tags: [{ id: 2, name: 'TypeScript', slug: 'typescript', color: '3178C6', count: 1 }],
+                category: 'Programming Languages',
+                readingTime: 8,
+                featured: false,
+                priority: 'high',
+                status: 'published',
+                hotness: 5,
+                commentsCount: 0,
+                referenceCount: 0,
+                metadata: {},
+            },
+        ];
+        // Simulate pagination for pageSize
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        return Promise.resolve(mockPosts.slice(start, end));
+    }
+
     try {
         const issues = await getIssues({
             page,

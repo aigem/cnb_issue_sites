@@ -44,7 +44,12 @@
         "enableRobots": true,
         "enableJsonLd": true,
         "defaultImage": "/og-image.png",
-        "twitterHandle": "@cnb_cool"
+        "twitterHandle": "@cnb_cool",
+        "verification": {
+          "google": "YOUR_GOOGLE_CODE",
+          "yandex": "YOUR_YANDEX_CODE",
+          "yahoo": "YOUR_YAHOO_CODE"
+        }
     },
     "features": {
         "newsletter": false,

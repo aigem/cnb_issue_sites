@@ -8,9 +8,9 @@ const nextConfig = {
         unoptimized: true,
     },
     env: {
-        BASE_URL: process.env.BASE_URL || 'https://api.cnb.cool',
-        REPO: process.env.REPO || 'cnb.ai/testblog',
-        AUTH_TOKEN: process.env.AUTH_TOKEN || '2Id119fZ36btt0Nckpwmr9vE3ZC',
+        BASE_URL: process.env.BASE_URL,
+        REPO: process.env.REPO,
+        AUTH_TOKEN: process.env.AUTH_TOKEN,
     },
 }
 

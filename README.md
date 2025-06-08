@@ -78,13 +78,44 @@ pnpm install
 ```
 
 ### 环境配置
-创建 `.env.local` 文件：
+环境变量是配置CNB静态博客系统的关键部分。系统采用分层配置策略：
+1.  **`lib/config.ts` (默认值)**: 提供所有配置项的基础默认值。
+2.  **`blog.config.json` (配置文件)**: 您可以在项目根目录创建此文件以覆盖默认值。此文件应加入版本控制。
+3.  **环境变量 (最高优先级)**: 系统环境变量或 `.env.local` 文件中的变量将覆盖所有其他配置。`.env.local` 文件用于本地开发，不应加入版本控制.
+
+**构建必需的环境变量**:
+构建过程 (`scripts/build.js`) 会检查以下环境变量是否已设置：
+- `REPO`: 您的CNB仓库标识 (例如, `username/repo_slug`)。
+- `AUTH_TOKEN`: 您的CNB API访问令牌。
+
+这些变量必须通过系统环境变量或在 `.env.local` 文件中提供。
+
+**示例 `.env.local`**:
 ```env
-BASE_URL=https://api.cnb.cool
-REPO=cnb.ai/testblog
-AUTH_TOKEN=your_auth_token_here
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
+# API相关 - 构建过程必需
+REPO=your_username/your_repo_slug
+AUTH_TOKEN=your_cnb_api_token # 必须设置
+
+# API基础URL (可选, lib/config.ts 有默认值)
+# BASE_URL=https://api.cnb.cool
+
+# 站点URL (可选, lib/config.ts 有默认值, 推荐设置以获得准确的元数据)
+# NEXT_PUBLIC_SITE_URL=https://your-domain.com
+
+# 其他CNB博客系统可识别的环境变量 (会覆盖 blog.config.json 和默认值)
+# NEXT_PUBLIC_SITE_TITLE=我的自定义博客标题
+# NEXT_PUBLIC_POSTS_PER_PAGE=5
+# VERIFICATION_GOOGLE=YOUR_GOOGLE_CODE
+# ... 更多变量请参考 lib/config.ts 和 blog.config.json 的结构
 ```
+
+**CI/部署特定环境变量**:
+`scripts/build.js` 脚本支持通过以下CI/部署特定的环境变量来设置 `REPO` 和 `AUTH_TOKEN`：
+- `CNB_REPO_SLUG_LOWERCASE`: 如果设置且 `REPO` 未设置，则 `REPO` 将使用此值。
+- `CNB_TOKEN`: 如果设置且 `AUTH_TOKEN` 未设置，则 `AUTH_TOKEN` 将使用此值。
+这为在CI环境中注入凭据提供了便利。
+
+**重要**: `AUTH_TOKEN` 和 `REPO` 是运行和构建博客所必需的。确保它们通过上述任一方式正确配置。
 
 ### 开发模式
 ```bash
@@ -213,23 +244,50 @@ $$
 ## 🔧 配置系统 (第二阶段更新)
 
 ### 统一配置管理
-- **多层配置**: 默认配置 < 配置文件 < 环境变量
-- **类型安全**: 完整的TypeScript类型定义
-- **配置验证**: 自动验证配置项的有效性
-- **热重载**: 支持配置更新后自动应用
+本项目通过 `lib/config.ts` 实现统一的配置管理，它定义了所有可用的配置项、它们的默认值以及加载和合并逻辑。
 
-### 配置文件支持
-支持多种配置方式：
-```bash
-# 环境变量配置
-NEXT_PUBLIC_SITE_TITLE="我的博客"
-NEXT_PUBLIC_SITE_DESCRIPTION="技术分享平台"
+- **配置层次与优先级**:
+    1.  **默认值**: 在 `lib/config.ts` 中的 `defaultConfig` 对象中定义。
+    2.  **`blog.config.json`**: 项目根目录下的JSON文件，用于覆盖默认值。建议将此文件纳入版本控制，以共享团队配置。
+    3.  **环境变量**: 从系统环境或 `.env.local` (用于本地开发)加载。环境变量具有最高优先级，会覆盖 `blog.config.json` 和默认值。
+- **类型安全**: 所有配置均有TypeScript类型定义 (`BlogConfig` 接口在 `lib/config.ts`)。
+- **配置验证**: `lib/config.ts` 在加载配置后会进行验证，确保关键字段存在且格式正确。
+- **构建时检查**: `scripts/build.js` 脚本在构建开始前会检查核心环境变量 (`REPO`, `AUTH_TOKEN`) 是否存在。
 
-# JSON配置文件 (blog.config.json)
+### `blog.config.json` 示例
+```json
 {
   "site": {
-    "title": "CNB技术博客",
-    "description": "分享前沿技术，探索创新思维"
+    "title": "我的CNB技术博客",
+    "description": "分享我的技术见解和学习笔记",
+    "url": "https://myblog.example.com"
+  },
+  "content": {
+    "postsPerPage": 8
+  },
+  "seo": {
+    "verification": {
+      "google": "YOUR_GOOGLE_CODE",
+      "yandex": "YOUR_YANDEX_CODE"
+    }
+  }
+  // ... 其他可配置项见 lib/config.ts BlogConfig 接口
+}
+```
+**注意**: 并非所有环境变量都适合放在 `blog.config.json` (例如 `AUTH_TOKEN`)。敏感信息应仅通过环境变量提供。
+
+**SEO站点验证**:
+可以通过环境变量 (参见 `.env.local` 示例) 或在 `blog.config.json` 文件中 `seo.verification` 部分配置站点验证码：
+```json
+// blog.config.json
+{
+  "seo": {
+    // ... 其他SEO配置
+    "verification": {
+      "google": "YOUR_GOOGLE_CODE",
+      "yandex": "YOUR_YANDEX_CODE",
+      "yahoo": "YOUR_YAHOO_CODE"
+    }
   }
 }
 ```
@@ -246,7 +304,7 @@ NEXT_PUBLIC_SITE_DESCRIPTION="技术分享平台"
 - **Markdown渲染**: 代码高亮、数学公式、目录导航
 - **主题外观**: 颜色、字体、布局样式
 - **功能开关**: PWA、RSS、社交分享等
-- **SEO设置**: 站点地图、结构化数据、社交标签
+- **SEO设置**: 站点地图、结构化数据、社交标签、站点验证码
 
 ### React Hooks
 ```typescript
@@ -274,12 +332,14 @@ module.exports = {
 }
 ```
 
-### API配置
-在 `lib/api.ts` 中修改API配置：
-```typescript
-const BASE_URL = process.env.BASE_URL || 'https://api.cnb.cool'
-const REPO = process.env.REPO || 'cnb.ai/testblog'
-```
+### API端点和仓库配置
+API相关的核心配置，如 `api.baseUrl`, `api.repo`, 和 `api.authToken`，通过 `lib/config.ts` 及其分层配置机制（默认值, `blog.config.json`, 环境变量）进行管理。
+
+- **`api.baseUrl`**: CNB API的根URL。默认为 `https://api.cnb.cool`。可以通过环境变量 `BASE_URL` 或 `blog.config.json` 中的 `api.baseUrl` 覆盖。
+- **`api.repo`**: 您的CNB仓库标识 (例如 `username/repo_slug`)。**此为必需配置**。通过环境变量 `REPO` (或CI中的 `CNB_REPO_SLUG_LOWERCASE`) 或 `blog.config.json` 中的 `api.repo` 设置。
+- **`api.authToken`**: 您的CNB API认证令牌。**此为必需配置**。通过环境变量 `AUTH_TOKEN` (或CI中的 `CNB_TOKEN`) 或 `blog.config.json` 中的 `api.authToken` 设置 (尽管不推荐将token直接放在JSON文件中)。
+
+确保 `REPO` 和 `AUTH_TOKEN` 已正确设置，否则应用无法获取数据。
 
 ## 📱 PWA支持
 

@@ -62,6 +62,11 @@ export interface BlogConfig {
         enableJsonLd: boolean
         defaultImage?: string
         twitterHandle?: string
+        verification?: {
+            google?: string;
+            yandex?: string;
+            yahoo?: string;
+        };
     }
 
     // 功能开关
@@ -123,6 +128,11 @@ const defaultConfig: BlogConfig = {
         enableSitemap: true,
         enableRobots: true,
         enableJsonLd: true,
+        verification: {
+            google: '',
+            yandex: '',
+            yahoo: '',
+        },
     },
 
     features: {
@@ -135,9 +145,14 @@ const defaultConfig: BlogConfig = {
     },
 }
 
+// Utility type for deep partial
+type DeepPartial<T> = {
+    [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
 // 从环境变量加载配置
-function loadConfigFromEnv(): Partial<BlogConfig> {
-    const envConfig: Partial<BlogConfig> = {}
+function loadConfigFromEnv(): DeepPartial<BlogConfig> {
+    const envConfig: DeepPartial<BlogConfig> = {}
 
     // 站点配置
     if (process.env.NEXT_PUBLIC_SITE_TITLE) {
@@ -198,6 +213,50 @@ function loadConfigFromEnv(): Partial<BlogConfig> {
         envConfig.theme!.darkMode = process.env.NEXT_PUBLIC_DARK_MODE as 'auto' | 'light' | 'dark'
     }
 
+    // SEO and Verification from environment variables
+    const hasGoogleVerification = !!process.env.VERIFICATION_GOOGLE;
+    const hasYandexVerification = !!process.env.VERIFICATION_YANDEX;
+    const hasYahooVerification = !!process.env.VERIFICATION_YAHOO;
+    const hasSeoVerificationEnv = hasGoogleVerification || hasYandexVerification || hasYahooVerification;
+
+    // Hypothetical env vars for other SEO fields
+    const seoEnableSitemapEnv = process.env.NEXT_PUBLIC_SEO_ENABLE_SITEMAP;
+    const seoEnableRobotsEnv = process.env.NEXT_PUBLIC_SEO_ENABLE_ROBOTS;
+    const seoDefaultImageEnv = process.env.NEXT_PUBLIC_SEO_DEFAULT_IMAGE;
+    // Add other SEO related env checks here...
+
+    if (hasSeoVerificationEnv || seoEnableSitemapEnv !== undefined || seoEnableRobotsEnv !== undefined || seoDefaultImageEnv !== undefined /* || other seo envs */) {
+        if (!envConfig.seo) {
+            envConfig.seo = {}; // Initialize as an empty object, type will be Partial<BlogConfig['seo']>
+        }
+
+        if (hasSeoVerificationEnv) {
+            if (!envConfig.seo.verification) {
+                envConfig.seo.verification = {}; // Initialize as an empty object, type will be Partial<BlogConfig['seo']['verification']>
+            }
+            if (hasGoogleVerification) {
+                envConfig.seo.verification.google = process.env.VERIFICATION_GOOGLE;
+            }
+            if (hasYandexVerification) {
+                envConfig.seo.verification.yandex = process.env.VERIFICATION_YANDEX;
+            }
+            if (hasYahooVerification) {
+                envConfig.seo.verification.yahoo = process.env.VERIFICATION_YAHOO;
+            }
+        }
+
+        if (seoEnableSitemapEnv !== undefined) {
+            envConfig.seo.enableSitemap = seoEnableSitemapEnv === 'true';
+        }
+        if (seoEnableRobotsEnv !== undefined) {
+            envConfig.seo.enableRobots = seoEnableRobotsEnv === 'true';
+        }
+        if (seoDefaultImageEnv !== undefined) {
+            envConfig.seo.defaultImage = seoDefaultImageEnv;
+        }
+        // Add other direct assignments to envConfig.seo properties here
+    }
+
     return envConfig
 }
 
@@ -225,20 +284,23 @@ async function loadConfigFromFile(): Promise<Partial<BlogConfig>> {
 }
 
 // 深度合并配置对象
-function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+// Source can now be DeepPartial<T>
+function deepMerge<T extends Record<string, any>>(target: T, source: DeepPartial<T>): T {
     const result = { ...target }
 
     for (const key in source) {
-        if (source[key] !== undefined) {
-            if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
-                result[key] = deepMerge(result[key] || {} as any, source[key])
+        const sourceValue = source[key];
+        if (sourceValue !== undefined) {
+            if (typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue) && typeof result[key] === 'object' && result[key] !== null) {
+                // Both target and source properties are objects, recurse
+                result[key] = deepMerge(result[key], sourceValue as DeepPartial<T[Extract<keyof T, string>]>);
             } else {
-                result[key] = source[key] as T[Extract<keyof T, string>]
+                // Source property is not an object or target property is not an object: overwrite
+                result[key] = sourceValue as T[Extract<keyof T, string>];
             }
         }
     }
-
-    return result
+    return result;
 }
 
 // 配置验证

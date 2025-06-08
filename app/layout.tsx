@@ -1,72 +1,148 @@
 import type { Metadata } from 'next'
+import { getSeoConfig } from '@/lib/config'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import './globals.css'
 
-export const metadata: Metadata = {
-    title: {
-        default: 'CNB博客 - 技术分享与思考',
-        template: '%s | CNB博客'
-    },
-    description: '分享技术见解、编程经验和创新思考的中文技术博客',
-    keywords: ['技术博客', '编程', '开发', '前端', '后端', 'JavaScript', 'TypeScript', 'React', 'Next.js'],
-    authors: [{ name: 'CNB团队' }],
-    creator: 'CNB',
-    publisher: 'CNB',
-    formatDetection: {
-        email: false,
-        address: false,
-        telephone: false,
-    },
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.cnb.cool'),
-    alternates: {
-        canonical: '/',
-        languages: {
-            'zh-CN': '/zh-CN',
-            'en-US': '/en-US',
+export async function generateMetadata(): Promise<Metadata> {
+    const seoConfig = await getSeoConfig();
+    const cleanVerification: Record<string, string> = {};
+
+    if (seoConfig.verification) {
+        for (const [key, value] of Object.entries(seoConfig.verification)) {
+            if (value && typeof value === 'string' && value.trim() !== '') {
+                cleanVerification[key] = value;
+            }
+        }
+    }
+
+    return {
+        title: {
+            default: 'CNB博客 - 技术分享与思考',
+            template: '%s | CNB博客'
         },
-    },
-    openGraph: {
-        type: 'website',
-        locale: 'zh_CN',
-        url: '/',
-        title: 'CNB博客 - 技术分享与思考',
         description: '分享技术见解、编程经验和创新思考的中文技术博客',
-        siteName: 'CNB博客',
-        images: [
-            {
-                url: '/og-image.png',
-                width: 1200,
-                height: 630,
-                alt: 'CNB博客',
+        keywords: ['技术博客', '编程', '开发', '前端', '后端', 'JavaScript', 'TypeScript', 'React', 'Next.js'],
+        authors: [{ name: 'CNB团队' }],
+        creator: 'CNB',
+        publisher: 'CNB',
+        formatDetection: {
+            email: false,
+            address: false,
+            telephone: false,
+        },
+        metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.cnb.cool'),
+        alternates: {
+            canonical: '/',
+            languages: {
+                'zh-CN': '/zh-CN',
+                'en-US': '/en-US',
             },
-        ],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'CNB博客 - 技术分享与思考',
-        description: '分享技术见解、编程经验和创新思考的中文技术博客',
-        images: ['/og-image.png'],
-        creator: '@cnb_blog',
-    },
-    robots: {
-        index: true,
-        follow: true,
-        googleBot: {
+        },
+        openGraph: {
+            type: 'website',
+            locale: 'zh_CN',
+            url: '/',
+            title: 'CNB博客 - 技术分享与思考',
+            description: '分享技术见解、编程经验和创新思考的中文技术博客',
+            siteName: 'CNB博客',
+            images: [
+                {
+                    url: '/og-image.png',
+                    width: 1200,
+                    height: 630,
+                    alt: 'CNB博客',
+                },
+            ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: 'CNB博客 - 技术分享与思考',
+            description: '分享技术见解、编程经验和创新思考的中文技术博客',
+            images: ['/og-image.png'],
+            creator: '@cnb_blog',
+        },
+        robots: {
             index: true,
             follow: true,
-            'max-video-preview': -1,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
+            googleBot: {
+                index: true,
+                follow: true,
+                'max-video-preview': -1,
+                'max-image-preview': 'large',
+                'max-snippet': -1,
+            },
         },
-    },
-    verification: {
-        google: 'your-google-verification-code',
-        yandex: 'your-yandex-verification-code',
-        yahoo: 'your-yahoo-verification-code',
-    },
+        verification: Object.keys(cleanVerification).length > 0 ? cleanVerification : undefined,
+    };
 }
+
+
+// Original metadata constant (can be removed or kept as a base if preferred)
+// export const metadata: Metadata = {
+//     title: {
+//         default: 'CNB博客 - 技术分享与思考',
+//         template: '%s | CNB博客'
+//     },
+//     description: '分享技术见解、编程经验和创新思考的中文技术博客',
+//     keywords: ['技术博客', '编程', '开发', '前端', '后端', 'JavaScript', 'TypeScript', 'React', 'Next.js'],
+//     authors: [{ name: 'CNB团队' }],
+//     creator: 'CNB',
+//     publisher: 'CNB',
+//     formatDetection: {
+//         email: false,
+//         address: false,
+//         telephone: false,
+//     },
+//     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.cnb.cool'),
+//     alternates: {
+//         canonical: '/',
+//         languages: {
+//             'zh-CN': '/zh-CN',
+//             'en-US': '/en-US',
+//         },
+//     },
+//     openGraph: {
+//         type: 'website',
+//         locale: 'zh_CN',
+//         url: '/',
+//         title: 'CNB博客 - 技术分享与思考',
+//         description: '分享技术见解、编程经验和创新思考的中文技术博客',
+//         siteName: 'CNB博客',
+//         images: [
+//             {
+//                 url: '/og-image.png',
+//                 width: 1200,
+//                 height: 630,
+//                 alt: 'CNB博客',
+//             },
+//         ],
+//     },
+//     twitter: {
+//         card: 'summary_large_image',
+//         title: 'CNB博客 - 技术分享与思考',
+//         description: '分享技术见解、编程经验和创新思考的中文技术博客',
+//         images: ['/og-image.png'],
+//         creator: '@cnb_blog',
+//     },
+//     robots: {
+//         index: true,
+//         follow: true,
+//         googleBot: {
+//             index: true,
+//             follow: true,
+//             'max-video-preview': -1,
+//             'max-image-preview': 'large',
+//             'max-snippet': -1,
+//         },
+//     },
+//     // verification: { // Will be populated dynamically
+//     //     google: 'your-google-verification-code',
+//     //     yandex: 'your-yandex-verification-code',
+//     //     yahoo: 'your-yahoo-verification-code',
+//     // },
+// }
 
 export default function RootLayout({
     children,
