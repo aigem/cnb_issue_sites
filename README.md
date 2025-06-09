@@ -14,6 +14,13 @@
 - **Markdown增强**: 支持代码高亮、数学公式、目录导航
 - **客户端搜索**: 使用FlexSearch实现快速的本地内容搜索功能，索引在构建时生成。
 - **部署就绪**: 支持Cloudflare Pages、EdgeOne Pages等平台
+- **增强的数据模型**:
+    - **优先级系统**: 支持 `urgent`, `high`, `medium`, `low`, `p0`, `p1`, `p2`, `p3`
+    - **状态管理**: `draft`, `published`, `archived`, `resolved`, `closed`
+    - **协作功能**: 支持多作者协作，包含完整的协作者信息
+    - **热度计算**: 基于评论数、引用数和时间衰减的智能热度算法
+    - **元数据增强**: 包含难度级别、分类、封面图片等丰富元数据
+- **管理仪表盘 (`/admin/dashboard`)**: 提供博客统计概览、内容管理工具 (如协作者、优先级/状态管理) 及活动日志等功能。
 
 ## 📁 项目结构
 
@@ -166,25 +173,42 @@ const results = await searchIssues(keyword)
 
 // 按标签获取文章
 const posts = await getIssuesByLabel(labelName)
+
+// --- 新增API函数 (Phase 3) ---
+// 高级搜索，支持优先级、分配者、时间范围等
+const resultsEnhanced = await searchIssuesEnhanced(params)
+
+// 按特定属性获取文章
+const postsByPriority = await getPostsByPriority(priority)
+const postsByStatus = await getPostsByStatus(status)
+const postsByHotness = await getPostsByHotness()
+const postsByAssignee = await getPostsByAssignee(assignee)
+const postsByDateRange = await getPostsByDateRange(startDate, endDate)
+
+// 统计与分析
+const blogStats = await getBlogStats()
+const popularTags = await getPopularTags()
+const activeAuthors = await getActiveAuthors()
 ```
+**API增强特性 (Phase 3)**:
+- **多层过滤**: 支持优先级、状态、时间范围、作者等多维度过滤。
+- **智能排序**: 支持按热度、优先级、评论数等多种排序方式。
 
 ## 📊 数据统计与局限性
 
-项目中的一些数据统计功能，例如博客总文章数、总评论数、总作者数、总标签数等 (通过 `lib/api.ts` 中的 `getBlogStats` 函数获取)，以及标签列表 (`getAllLabels`) 和作者列表 (`getAllAuthors`)，目前依赖于获取大量的 Issues (例如，最多500条开放和500条关闭的 Issues) 然后在客户端进行聚合统计。
+项目引入了更强大的数据统计功能，通过 `lib/api.ts` 中的 `getBlogStats()` (Phase 3新增/增强) 等新API函数，提供博客相关的统计信息，例如总文章数、评论数、作者数、热门标签、活跃作者等。这些新的API旨在提供更全面和准确的数据。
 
-这种方法的局限性包括：
+尽管新API (`getBlogStats()`, `getPopularTags()`, `getActiveAuthors()`) 提供了更强的统计能力，但在处理超大规模博客（例如，远超API常规分页处理能力的Issue数量）时，以下潜在局限性仍需注意：
 
--   **数据可能不完整或不准确**: 如果博客的 Issues 总数、标签种类数或作者数超过了 API 单次（或几次）获取的上限（例如 `getIssues({ page_size: 500 })`），则统计数据可能不完全准确。例如，如果博客有超过1000篇文章，`getBlogStats` 可能无法统计到所有文章。
--   **性能问题**: 获取大量 Issues 数据（即使仅用于统计）可能会比较缓慢，并增加对 CNB Issues API 的请求次数和负载。这可能影响首页加载速度或构建时间。
--   **API 限制**: 高频率或大量的 API 请求可能会触发 API 的速率限制。
+-   **数据准确性**: 对于拥有海量Issue（文章）的博客，如果总条目数、标签种类或作者数量远超API单次或合理多次分页请求所能覆盖的范围，统计结果仍可能并非100%精确。新的API会尽力聚合数据，但极端情况下可能存在估算成分。
+-   **性能考量**: 虽然API层面进行了优化（如缓存、批量获取），但获取和聚合超大量数据进行统计分析始终会对CNB Issues API产生一定负载，并可能影响响应时间。
+-   **API 限制**: 频繁或大规模的数据请求仍需注意潜在的API速率限制。
 
-**潜在的改进方向或替代方案**:
+**改进方向**:
+-   **预计算脚本**: `phase3-completion.md` 中提及的“预计算脚本”思路仍然是提升大规模数据统计准确性和性能的有效长期方案。如果未来实现了此类脚本（例如通过GitHub Actions定期执行，将统计结果存为JSON文件供前端直接读取），将能显著改善上述局限性。目前，项目依赖于实时或缓存的API聚合。
+-   **后端聚合端点**: 若CNB Issues API未来提供更直接、高效的统计聚合端点，应优先采用。
 
--   **调整 API 请求参数**: 可以适当增加 `page_size` 参数的值，但这会增加单次请求的负载和响应时间。
--   **预计算脚本**: 对于需要更高准确性和性能的场景，可以考虑创建一个预计算脚本。该脚本可以定期（例如，通过 GitHub Actions）获取所有分页的 Issues 数据，进行精确统计，并将结果保存到一个 JSON 文件中。前端应用则可以直接读取这个预计算的 JSON 文件，从而避免实时聚合的开销和不准确性。
--   **后端聚合**: 如果 CNB Issues API 未来提供直接的统计聚合端点 (例如，直接返回总文章数、各标签文章数等)，则应更新 `lib/api.ts` 中的相关函数以使用这些高效的 API 端点。
-
-目前，首页展示的统计数据应被视为一种估算，其准确性受限于上述因素。
+总体而言，Phase 3引入的统计功能 (`getBlogStats`, `getPopularTags`, `getActiveAuthors`) 是一个显著的进步，能为大多数博客提供准确且有价值的洞察。对于超大规模博客，用户应理解其数据可能存在的理论上的局限性。
 
 ## 🎨 组件系统
 
@@ -201,6 +225,12 @@ const posts = await getIssuesByLabel(labelName)
 - `LatestPosts`: 最新文章列表
 - `Newsletter`: 邮件订阅组件
 - `TableOfContents`: 文章目录导航组件
+
+### Phase 3 新增UI组件
+- `AdvancedSearch`: 提供多维度搜索功能，包括关键词、优先级、状态、作者、时间范围，并支持URL同步。
+- `BlogStats`: 展示博客的统计仪表板，包括总文章数、评论数、作者数、活跃度，以及优先级和状态的分布图表、热门标签和活跃作者排行。
+- `CollaboratorManager`: 用于管理文章协作者，支持添加、移除、搜索协作者，并显示头像和信息。
+- `PriorityStatusManager`: 可视化管理文章的优先级和状态，支持只读模式和设置摘要显示。
 
 ## 🌐 部署指南
 

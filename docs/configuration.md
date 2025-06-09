@@ -169,6 +169,7 @@ NEXT_PUBLIC_DARK_MODE=auto
 | pwa | boolean | ✓ | PWA支持 |
 | rss | boolean | ✓ | RSS订阅 |
 | socialShare | boolean | ✓ | 社交分享 |
+| showHomepageStats | boolean | ✓ | 控制首页统计信息区域的显示 (Phase 3 新增) |
 
 ### SEO设置 (seo)
 
