@@ -5,10 +5,12 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { MobileNavMenu } from './mobile-nav-menu'; // Added import
 
 export function Header() {
     const { theme, setTheme } = useTheme()
     const [mounted, setMounted] = React.useState(false)
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false); // Added state
 
     React.useEffect(() => {
         setMounted(true)
@@ -121,7 +123,7 @@ export function Header() {
                         )}
 
                         {/* Mobile menu */}
-                        <Button variant="ghost" size="icon" className="md:hidden">
+                        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(true)}> {/* Modified onClick */}
                             <svg
                                 className="h-4 w-4"
                                 fill="none"
@@ -140,6 +142,13 @@ export function Header() {
                     </div>
                 </div>
             </div>
+            {/* Render MobileNavMenu */}
+            {isMobileMenuOpen && (
+                <MobileNavMenu
+                    isOpen={isMobileMenuOpen}
+                    onClose={() => setIsMobileMenuOpen(false)}
+                />
+            )}
         </header>
     )
 }
