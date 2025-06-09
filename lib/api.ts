@@ -116,6 +116,44 @@ async function apiRequest<T>(endpoint: string, params?: Record<string, any>): Pr
     throw lastError!
 }
 
+// Function to fetch all paginated data
+export async function fetchAllPaginatedData<T>(
+    endpoint: string,
+    initialParams: Record<string, any> = {}
+): Promise<T[]> {
+    const PAGE_SIZE = 100
+    let allResults: T[] = []
+    let currentPage = 1
+    let continueFetching = true
+
+    while (continueFetching) {
+        const params = {
+            ...initialParams,
+            page: currentPage,
+            page_size: PAGE_SIZE,
+        }
+
+        try {
+            const results = await apiRequest<T[]>(endpoint, params)
+            if (results && results.length > 0) {
+                allResults = allResults.concat(results)
+                currentPage++
+            } else {
+                continueFetching = false // No more data or empty array returned
+            }
+        } catch (error) {
+            console.error(`Error fetching page ${currentPage} for ${endpoint}:`, error)
+            // Depending on requirements, you might want to re-throw, or stop,
+            // or allow partial results. For now, stop and return what we have.
+            continueFetching = false
+            // Optionally re-throw if partial data is not acceptable:
+            // throw error;
+        }
+    }
+
+    return allResults
+}
+
 // 获取Issues列表（博客文章列表）
 export async function getIssues(params: IssuesListParams = {}): Promise<Issue[]> {
     if (process.env.MOCK_API_FOR_BUILD === 'true') {
@@ -322,9 +360,20 @@ export async function getIssueAssignees(number: number): Promise<UserInfo[]> {
 
 // 获取所有标签（用于标签页面）
 export async function getAllLabels(): Promise<Label[]> {
+    if (process.env.MOCK_API_FOR_BUILD === 'true') {
+        console.log('🚧 Using mock API data for getAllLabels 🚧');
+        // Example mock labels, adjust as needed or derive from mock issues if preferred
+        const mockLabels: Label[] = [
+            { id: 1, name: 'Next.js', color: '0070F3', description: 'Framework for React' },
+            { id: 2, name: 'TypeScript', color: '3178C6', description: 'Typed JavaScript' },
+            { id: 3, name: 'Blog', color: 'fbca04', description: 'General blog posts' },
+        ];
+        return Promise.resolve(mockLabels);
+    }
+
     try {
-        // 先获取所有issues来收集标签
-        const issues = await getIssues({ page_size: 100 })
+        // Fetch all open issues to collect labels
+        const issues = await fetchAllPaginatedData<Issue>('/issues', { state: 'open' });
         const labelsMap = new Map<string, Label>()
 
         // 收集所有唯一标签
@@ -350,8 +399,18 @@ export async function getAllLabels(): Promise<Label[]> {
 
 // 获取所有作者（用于作者页面）
 export async function getAllAuthors(): Promise<UserInfo[]> {
+    if (process.env.MOCK_API_FOR_BUILD === 'true') {
+        console.log('🚧 Using mock API data for getAllAuthors 🚧');
+        // Example mock authors, adjust as needed
+        const mockAuthors: UserInfo[] = [
+            { id: 1, username: 'mockuser', name: 'Mock User', avatar: 'https://via.placeholder.com/40' },
+            { id: 2, username: 'anothermock', name: 'Another Mock', avatar: 'https://via.placeholder.com/40' },
+        ];
+        return Promise.resolve(mockAuthors);
+    }
+
     try {
-        const issues = await getIssues({ page_size: 100 })
+        const issues = await fetchAllPaginatedData<Issue>('/issues', { state: 'open' });
         const authorsMap = new Map<string, UserInfo>()
 
         issues.forEach(issue => {
@@ -447,9 +506,10 @@ function transformIssueToPost(issue: Issue): any {
 }
 
 // 获取所有文章（转换后的格式）
-export async function getAllPosts(page: number = 1, pageSize: number = 30): Promise<BlogPost[]> {
+export async function getAllPosts(): Promise<BlogPost[]> {
     if (process.env.MOCK_API_FOR_BUILD === 'true') {
         console.log('🚧 Using mock API data for getAllPosts 🚧');
+        // Return all mock posts, pagination is no longer relevant here
         const mockPosts: BlogPost[] = [
             {
                 id: 1,
@@ -496,22 +556,17 @@ export async function getAllPosts(page: number = 1, pageSize: number = 30): Prom
                 metadata: {},
             },
         ];
-        // Simulate pagination for pageSize
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        return Promise.resolve(mockPosts.slice(start, end));
+        return Promise.resolve(mockPosts);
     }
 
     try {
-        const issues = await getIssues({
-            page,
-            page_size: pageSize,
+        const issues = await fetchAllPaginatedData<Issue>('/issues', {
             state: 'open',
             order_by: '-updated_at',
-        })
+        });
 
         return issues
-            .filter(issue => issue && issue.title) // 过滤掉无效的issue
+            .filter(issue => issue && issue.title) // Filter out invalid issues
             .map(issue => {
                 try {
                     return issueToBlogPost(issue)
@@ -733,8 +788,8 @@ export async function getBlogStats(): Promise<{
 
         // 获取所有文章进行统计 - 分别获取开放和关闭的issues
         const [openIssues, closedIssues] = await Promise.all([
-            getIssues({ page_size: 500, state: 'open' }), // Fetches up to 500 open issues
-            getIssues({ page_size: 500, state: 'closed' }) // Fetches up to 500 closed issues
+            fetchAllPaginatedData<Issue>('/issues', { state: 'open' }),
+            fetchAllPaginatedData<Issue>('/issues', { state: 'closed' })
         ]);
         const allIssues = [...openIssues, ...closedIssues];
         const authors = new Set<string>()
@@ -802,7 +857,7 @@ export async function getBlogStats(): Promise<{
 // 获取热门标签（按使用频率排序）
 export async function getPopularTags(limit: number = 20): Promise<Array<{ name: string; count: number; color?: string }>> {
     try {
-        const issues = await getIssues({ page_size: 200 })
+        const issues = await fetchAllPaginatedData<Issue>('/issues', { state: 'open' });
         const tagCounts = new Map<string, { count: number; color?: string }>()
 
         issues.forEach(issue => {
@@ -828,7 +883,7 @@ export async function getPopularTags(limit: number = 20): Promise<Array<{ name: 
 // 获取活跃作者（按文章数量排序）
 export async function getActiveAuthors(limit: number = 10): Promise<Array<{ author: UserInfo; postCount: number }>> {
     try {
-        const issues = await getIssues({ page_size: 200 })
+        const issues = await fetchAllPaginatedData<Issue>('/issues', { state: 'open' });
         const authorCounts = new Map<string, { author: UserInfo; postCount: number }>()
 
         issues.forEach(issue => {

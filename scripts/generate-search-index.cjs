@@ -44,40 +44,36 @@ async function fetchAllPostsForIndexInternal() {
         }
     }
 
-    const baseUrl = process.env.BASE_URL || 'https://api.cnb.cool';
-    const repo = process.env.REPO;
-    const authToken = process.env.AUTH_TOKEN;
-
-    if (!repo) { // authToken might be optional for public repos in some APIs
-        console.error('[generate-search-index] REPO environment variable is missing for live API call.');
-        process.exit(1);
-    }
-    // Fetch a large number of issues
-    const url = `${baseUrl}/${repo}/-/issues?page=1&page_size=500&state=open&order_by=-updated_at`;
-    console.log(`[generate-search-index] Fetching live data from: ${url}`);
-
-    const headers = { 'Accept': 'application/json' };
-    if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-    }
-
+    // The actual API call is now delegated to getAllPosts from lib/api
     try {
-        const response = await fetch(url, { headers });
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status} ${response.statusText} - ${await response.text()}`);
-        }
-        const issues = await response.json();
-        console.log(`[generate-search-index] Fetched ${issues.length} raw issues from API.`);
+        // Attempt to require getAllPosts. This path might need adjustment based on
+        // the project's build output (e.g., '../dist/lib/api') or if using ts-node.
+        const { getAllPosts } = require('../lib/api'); // Assuming lib/api.ts is compiled to lib/api.js
 
-        return issues.map(issue => ({
-            slug: issue.number.toString(), // Assuming slug is derived from issue number
-            title: issue.title || 'Untitled',
-            content: issue.body || '',
-            tags: issue.labels ? issue.labels.map(l => ({ name: l.name })) : [],
-            excerpt: simpleMarkdownToText((issue.body || '').substring(0, 200)) + '...'
+        console.log('[generate-search-index] Fetching live data using getAllPosts from lib/api...');
+        const blogPosts = await getAllPosts(); // getAllPosts now returns BlogPost[]
+
+        console.log(`[generate-search-index] Fetched ${blogPosts.length} posts using getAllPosts.`);
+
+        // The BlogPost[] structure from getAllPosts should be largely compatible.
+        // Ensure 'slug', 'title', 'content', 'tags', and 'excerpt' are available as expected by generateIndex.
+        // The issueToBlogPost transformation already creates these fields.
+        // 'content' in BlogPost is the raw markdown body.
+        // 'tags' in BlogPost are objects like { id, name, slug, color, count }. We need just the name for indexing.
+        // 'excerpt' in BlogPost is already generated.
+        return blogPosts.map(post => ({
+            id: post.id.toString(), // FlexSearch expects 'id' for the document
+            slug: post.slug,
+            title: post.title,
+            content: post.content, // Raw markdown, will be stripped by simpleMarkdownToText later
+            tags: post.tags.map(tag => tag.name), // Extract tag names for indexing
+            excerpt: post.excerpt
         }));
     } catch (error) {
-        console.error('[generate-search-index] Error fetching or processing live posts:', error);
+        console.error('[generate-search-index] Error fetching or processing live posts via getAllPosts:', error);
+        if (error.code === 'MODULE_NOT_FOUND') {
+            console.error("[generate-search-index] Hint: Ensure 'lib/api.ts' is compiled to JavaScript at the expected path or use ts-node/register if running TypeScript directly.");
+        }
         process.exit(1);
     }
 }
@@ -97,7 +93,8 @@ async function generateIndex() {
     }
 
     const storeData = posts.map(post => ({
-        id: post.slug,
+        // Ensure 'id' used here matches what's added to FlexSearch index (slug or post.id.toString())
+        id: post.id, // fetchAllPostsForIndexInternal now returns 'id' field from BlogPost
         title: post.title,
         slug: post.slug,
         excerpt: post.excerpt || simpleMarkdownToText((post.content || '').substring(0,150)) // Ensure excerpt exists
@@ -112,15 +109,16 @@ async function generateIndex() {
     });
 
     posts.forEach(post => {
-        if (!post.slug) {
-            console.warn(`[generate-search-index] Skipping post due to missing slug: ${post.title || 'Untitled Post'}`);
+        // Ensure 'id' used here matches what's in storeData and what FlexSearch expects
+        if (!post.id) { // Changed from post.slug to post.id for consistency with storeData
+            console.warn(`[generate-search-index] Skipping post due to missing id: ${post.title || 'Untitled Post'}`);
             return;
         }
         index.add({
-            id: post.slug,
+            id: post.id, // Using 'id' from BlogPost as document id
             title: post.title,
             content: simpleMarkdownToText(post.content || ''), // Ensure content is a string
-            tags: post.tags && Array.isArray(post.tags) ? post.tags.map(t => t.name).join(' ') : ''
+            tags: Array.isArray(post.tags) ? post.tags.join(' ') : '' // post.tags is now string[] from the mapping
         });
     });
 
