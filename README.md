@@ -1,5 +1,7 @@
 # CNB静态博客系统
 
+**CNB博客** - 让分享更简单 🚀 人人有好博！
+
 基于CNB Issues API构建的现代化静态博客系统，使用Next.js 15、React 19、TypeScript和Tailwind CSS开发。
 
 ## 🚀 项目特性
@@ -12,7 +14,100 @@
 - **PWA支持**: 包含Web App Manifest
 - **API集成**: 与CNB Issues API无缝集成
 - **Markdown增强**: 支持代码高亮、数学公式、目录导航
-- **部署就绪**: 支持Cloudflare Pages、EdgeOne Pages等平台
+- **部署就绪**: 支持Cloudflare Pages、EdgeOne Pages等所有静态部署平台
+
+## 使用CNB ISSUE做博客的好处：
+- `拖放式上传图片及文件，复制的图片可以直接粘贴到输入区域（包括评论中），使用体验好`
+- `关注CNB公众号后，ISSUE评论回复会有在微信服务号中得到通知，交流互动及时`
+- `CNB=国内版Github,永久免费不是吹`
+- `CNB API相当完善，你自己用AI写一个静态网站也可以`
+- `你直接拿CNB ISSUE系统来做博客做记录就可以，但静态网站部署后，利于SEO，便于你的内容被搜索引擎收录`
+- `写博客做记录有很多好处，用CNB能以最简便的方式让你写博客，获取写博客的好处`
+
+### Todo
+
+- 完成喂饭级部署教程（edgeone篇）：`- [] `
+- 完成分类及标签页面：`- [] `
+- 增加按钮触发构建：`- [x] 完成 `
+- 增加ISSUE触发构建：`- [] `
+- 增加外部发布ISSUE功能：`- [] `
+- 指定用户来构建静态网站，防止无关issue写入静态网站中：`- [] `
+- 接入AI API：`- [] `
+- 完成喂饭级部署教程（firebase、cf pages、vercel、github篇）：`- [] `
+- 更好的前端主题样式：`- [] `
+
+## 🌐 部署指南
+
+### ISSUE博客系统 【核心系统，太好用了】
+
+- #### fork为自己的仓库，创建一篇issue
+- #### 点击橙色的云原生开发进行后台，等待一会打开弹出通知的网址即可查看网站了。
+- #### 这是直接拿issue作为记录的平台，开箱即用！以下构建为静态博客网站为可选项。
+- #### 有问请查看 https://cnb.cool/aii.mobi/blog/-/issues/2
+
+
+### EdgeOne Pages 【部署为静态，利于SEO,为可选项】
+
+先Fork我这个仓库，然后根据以下的步骤来操作，不难的。
+
+
+
+1. 用邮箱注册EdgeOne，[网址](https://edgeone.ai/)
+
+![alt text](assets/image6.png)
+
+2. 来创建一个page项目:
+
+![alt text](assets/image.png)
+
+在这里新建 https://console.tencentcloud.com/edgeone/pages
+
+点击选择“直接上传”的方式。
+
+![alt text](assets/image2.png)
+
+进入部署页面，加整区域根据你的需求来选择。
+
+之后点击示例模板，随便选一个，之后左上角修改项目名称为：“cnb-issue-sites”。
+
+之后点击开始部署。
+
+4. 获取API token
+
+创建复制即可。
+
+5. 之后在cnb中新建一个密码仓库，增加一个文件，名称为：'envs.yml'
+
+内容为：
+
+```
+# envs.yml
+# 获取网址：https://console.tencentcloud.com/edgeone/pages?tab=api
+EDGEONE_PAGES_API_TOKEN: <your_api_token你刚才复制的api token>
+```
+
+6. 之后复制这个文件的网址：
+
+![alt text](assets/image3.png)
+
+7.回到你fork的这个仓库，点击打开 .cnb.yml文件，粘贴刚才复制的网址。
+
+![alt text](assets/image4.png)
+
+![alt text](assets/image5.png)
+
+之后保存提交即可。
+
+## 多种部署方式
+
+- 可定时进行构建静态博客；
+- 你修改了仓库文件 push后也会自动构建；
+- 可以点击仓库页面中指定按钮来构建（进行中）；
+- 新建一个issue后也会自动构建（进行中）；
+
+#### 部署视频教程：（上线中）
+
+## 以下为你进一步了解及自定义的详细说明。可看可不看。
 
 ## 📁 项目结构
 
@@ -62,14 +157,14 @@ cnb-static-blog/
 - **PostCSS**: CSS处理工具
 - **Autoprefixer**: CSS前缀自动添加
 
-### 部署平台
+### 部署平台（静态部署）
 - **Cloudflare Pages**: 边缘计算静态托管
 - **EdgeOne Pages**: 腾讯云边缘托管
 
 ## 🚀 快速开始
 
 ### 环境要求
-- Node.js 18+
+- Node.js 20+
 - pnpm
 
 ### 安装依赖
@@ -115,52 +210,6 @@ pnpm run preview
 - **文章详情**: 获取单个Issue的详细内容
 - **评论系统**: 支持Issue评论作为文章评论
 - **标签系统**: 使用Issue标签进行文章分类
-- **搜索功能**: 支持关键词搜索文章
-
-### API函数
-```typescript
-// 获取所有文章
-const posts = await getAllPosts()
-
-// 获取文章详情
-const post = await getPostBySlug(slug)
-
-// 搜索文章
-const results = await searchIssues(keyword)
-
-// 按标签获取文章
-const posts = await getIssuesByLabel(labelName)
-```
-
-## 🎨 组件系统
-
-### UI组件
-- `Button`: 按钮组件，支持多种变体
-- `Card`: 卡片容器组件
-- `LoadingSpinner`: 加载动画组件
-
-### 业务组件
-- `Header`: 导航头部，包含主题切换
-- `Footer`: 页脚信息
-- `HeroSection`: 首页英雄区域
-- `FeaturedPosts`: 精选文章展示
-- `LatestPosts`: 最新文章列表
-- `Newsletter`: 邮件订阅组件
-- `TableOfContents`: 文章目录导航组件
-
-## 🌐 部署指南
-
-### Cloudflare Pages
-1. 连接GitHub仓库
-2. 设置构建命令: `pnpm run build:static`
-3. 设置输出目录: `out`
-4. 配置环境变量
-
-### EdgeOne Pages
-1. 导入项目
-2. 配置构建设置
-3. 设置环境变量
-4. 部署
 
 ## 📊 SEO优化
 
@@ -176,7 +225,7 @@ const posts = await getIssuesByLabel(labelName)
 - CSS和JavaScript压缩
 - CDN加速
 
-## ✨ Markdown渲染增强 (第一阶段更新)
+## ✨ Markdown渲染
 
 ### 代码语法高亮
 支持20+编程语言的语法高亮：
@@ -203,27 +252,9 @@ $$
 - 滚动高亮当前章节
 - 平滑滚动导航
 
-### 增强功能
-- 任务列表支持：`- [x] 已完成任务`
-- 表格样式优化
-- 代码块复制按钮
-- 深色主题适配
-- 响应式设计
-
-## 🔧 配置系统 (第二阶段更新)
-
-### 统一配置管理
-- **多层配置**: 默认配置 < 配置文件 < 环境变量
-- **类型安全**: 完整的TypeScript类型定义
-- **配置验证**: 自动验证配置项的有效性
-- **热重载**: 支持配置更新后自动应用
-
 ### 配置文件支持
-支持多种配置方式：
+请按需修改`blog.config.js`文件：
 ```bash
-# 环境变量配置
-NEXT_PUBLIC_SITE_TITLE="我的博客"
-NEXT_PUBLIC_SITE_DESCRIPTION="技术分享平台"
 
 # JSON配置文件 (blog.config.json)
 {
@@ -233,53 +264,15 @@ NEXT_PUBLIC_SITE_DESCRIPTION="技术分享平台"
   }
 }
 ```
+此文件位置为/workspace/blog.config.json，在项目根目录下。
 
-### 可视化配置界面
-- **Web界面**: `/admin/config` 路径访问配置管理
-- **实时预览**: 配置更改即时生效
-- **分类管理**: 按功能模块组织配置项
-- **一键重置**: 快速恢复默认配置
-
-### 配置模块
+#### 配置模块
 - **站点信息**: 标题、描述、作者、联系方式
 - **内容设置**: 分页、摘要、显示选项
 - **Markdown渲染**: 代码高亮、数学公式、目录导航
 - **主题外观**: 颜色、字体、布局样式
 - **功能开关**: PWA、RSS、社交分享等
 - **SEO设置**: 站点地图、结构化数据、社交标签
-
-### React Hooks
-```typescript
-// 使用配置Hook
-const { config, loading, error } = useConfig()
-const { siteConfig } = useSiteConfig()
-const { themeConfig } = useThemeConfig()
-```
-
-## 🔧 自定义配置
-
-### 主题定制
-修改 `tailwind.config.js` 来自定义主题：
-```javascript
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        primary: {
-          // 自定义主色调
-        }
-      }
-    }
-  }
-}
-```
-
-### API配置
-在 `lib/api.ts` 中修改API配置：
-```typescript
-const BASE_URL = process.env.BASE_URL || 'https://api.cnb.cool'
-const REPO = process.env.REPO || 'cnb.ai/testblog'
-```
 
 ## 📱 PWA支持
 
@@ -288,17 +281,10 @@ const REPO = process.env.REPO || 'cnb.ai/testblog'
 - 服务工作者(可选)
 - 离线支持(可选)
 
-## 🤝 贡献指南
-
-1. Fork项目
-2. 创建特性分支: `git checkout -b feature/amazing-feature`
-3. 提交更改: `git commit -m 'Add amazing feature'`
-4. 推送分支: `git push origin feature/amazing-feature`
-5. 提交Pull Request
 
 ## 📄 许可证
 
-本项目采用MIT许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+本项目采用MIT许可证
 
 ## 🆘 支持
 
@@ -313,7 +299,3 @@ const REPO = process.env.REPO || 'cnb.ai/testblog'
 - [Tailwind CSS文档](https://tailwindcss.com/docs)
 - [shadcn/ui文档](https://ui.shadcn.com)
 - [CNB API文档](https://api.cnb.cool/docs)
-
----
-
-**CNB博客** - 让技术分享更简单 🚀

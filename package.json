@@ -1,7 +1,7 @@
 {
     "name": "cnb-static-blog",
-    "version": "1.0.0",
-    "description": "基于CNB Issues API的静态博客系统",
+    "version": "1.3.0",
+    "description": "基于CNB Issues API的静态博客系统 by ai来事",
     "private": true,
     "scripts": {
         "dev": "next dev",
@@ -10,6 +10,7 @@
         "lint": "next lint",
         "export": "next export",
         "build:static": "node scripts/build.js",
+        "stage1": "node scripts/cnb-stage1.js",
         "type-check": "tsc --noEmit",
         "preview": "pnpm run build:static && npx serve out"
     },
@@ -25,6 +26,7 @@
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.0.0",
         "date-fns": "^2.30.0",
+        "edgeone": "^1.0.25",
         "gray-matter": "^4.0.3",
         "katex": "^0.16.22",
         "lucide-react": "^0.294.0",
@@ -56,6 +58,7 @@
     },
     "pnpm": {
         "onlyBuiltDependencies": [
+            "esbuild",
             "sharp",
             "unrs-resolver"
         ]

@@ -1,11 +1,11 @@
 {
     "site": {
-        "title": "CNB技术博客",
+        "title": "Ai佬的探索思考与分享",
         "description": "分享前沿技术，探索创新思维",
-        "url": "https://blog.cnb.cool",
-        "author": "CNB团队",
-        "email": "contact@cnb.cool",
-        "logo": "/logo.png",
+        "url": "https://blog.aii.mobi",
+        "author": "ai来事",
+        "email": "fuliniu@outlook.com",
+        "logo": "/default-avatar.png",
         "favicon": "/favicon.ico"
     },
     "api": {

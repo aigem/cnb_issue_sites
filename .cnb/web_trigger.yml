@@ -1,0 +1,5 @@
+branch:
+  - buttons:
+      - name: 构建及发布
+        description: 自动生成网站并发布到Edgeone Pages中
+        event: web_trigger
