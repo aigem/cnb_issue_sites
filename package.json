@@ -29,7 +29,7 @@
         "edgeone": "^1.0.25",
         "gray-matter": "^4.0.3",
         "katex": "^0.16.22",
-        "lucide-react": "^0.294.00.294.0",
+        "lucide-react": "^0.460.0",
         "marked": "^9.1.6",
         "marked-highlight": "^2.2.1",
         "next": "^15.0.0",
